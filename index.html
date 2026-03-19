@@ -425,11 +425,6 @@
         <label>Classroom &amp; School News</label>
         <textarea id="edit-news" rows="4" placeholder="Enter news or announcements…"></textarea>
       </div>
-      <div class="edit-section">
-        <label>Upcoming Dates</label>
-        <div id="edit-dates-list"></div>
-        <button class="btn" onclick="addDateField()">+ Add Date</button>
-      </div>
     </div>
     <div class="edit-pane" id="pane-override">
       <div class="edit-section">
@@ -458,20 +453,19 @@ function todayKey(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1
 const DEFAULTS={
   dayOverride:'auto',
   periodsA:[
-    {name:"Strings 8",startTime:"08:10",endTime:"09:41",objective:"Students will perform with proper tone and bow technique.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale practice",done:false},{text:"Rehearse current piece",done:false},{text:"Section work",done:false}]},
-    {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}]},
-    {name:"Percussion 6",startTime:"12:08",endTime:"13:38",objective:"Students will develop rhythmic accuracy and mallet technique.",agenda:[{text:"Warm-up: rudiments",done:false},{text:"Rhythm exercises",done:false},{text:"Rehearse current piece",done:false}]},
-    {name:"Percussion 7",startTime:"13:41",endTime:"15:00",objective:"Students will apply dynamic contrast in ensemble playing.",agenda:[{text:"Warm-up: stick control",done:false},{text:"Dynamic exercises",done:false},{text:"Ensemble rehearsal",done:false}]}
+    {name:"Strings 8",startTime:"08:10",endTime:"09:41",objective:"Students will perform with proper tone and bow technique.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale practice",done:false},{text:"Rehearse current piece",done:false},{text:"Section work",done:false}],dates:[]},
+    {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}],dates:[]},
+    {name:"Percussion 6",startTime:"12:08",endTime:"13:38",objective:"Students will develop rhythmic accuracy and mallet technique.",agenda:[{text:"Warm-up: rudiments",done:false},{text:"Rhythm exercises",done:false},{text:"Rehearse current piece",done:false}],dates:[]},
+    {name:"Percussion 7",startTime:"13:41",endTime:"15:00",objective:"Students will apply dynamic contrast in ensemble playing.",agenda:[{text:"Warm-up: stick control",done:false},{text:"Dynamic exercises",done:false},{text:"Ensemble rehearsal",done:false}],dates:[]}
   ],
   periodsB:[
-    {name:"Brass 7",startTime:"08:10",endTime:"09:41",objective:"Students will play scales with consistent tone and intonation.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale/arpeggio practice",done:false},{text:"Rehearse concert piece",done:false}]},
-    {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}]},
-    {name:"Brass 7 (Part 1)",startTime:"11:38",endTime:"12:36",objective:"Students will sight-read and rehearse new material.",agenda:[{text:"Sight-reading exercise",done:false},{text:"Section rehearsal",done:false}]},
-    {name:"Brass 7 (Part 2)",startTime:"13:08",endTime:"13:38",objective:"Students will focus on balance and blend.",agenda:[{text:"Balance/blend exercises",done:false},{text:"Full run-through",done:false}]},
-    {name:"Strings 8",startTime:"13:41",endTime:"15:00",objective:"Students will refine bowing technique and musical expression.",agenda:[{text:"Warm-up: scales",done:false},{text:"Bowing technique drill",done:false},{text:"Expression/dynamics",done:false},{text:"Performance run-through",done:false}]}
+    {name:"Brass 7",startTime:"08:10",endTime:"09:41",objective:"Students will play scales with consistent tone and intonation.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale/arpeggio practice",done:false},{text:"Rehearse concert piece",done:false}],dates:[]},
+    {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}],dates:[]},
+    {name:"Brass 7 (Part 1)",startTime:"11:38",endTime:"12:36",objective:"Students will sight-read and rehearse new material.",agenda:[{text:"Sight-reading exercise",done:false},{text:"Section rehearsal",done:false}],dates:[]},
+    {name:"Brass 7 (Part 2)",startTime:"13:08",endTime:"13:38",objective:"Students will focus on balance and blend.",agenda:[{text:"Balance/blend exercises",done:false},{text:"Full run-through",done:false}],dates:[]},
+    {name:"Strings 8",startTime:"13:41",endTime:"15:00",objective:"Students will refine bowing technique and musical expression.",agenda:[{text:"Warm-up: scales",done:false},{text:"Bowing technique drill",done:false},{text:"Expression/dynamics",done:false},{text:"Performance run-through",done:false}],dates:[]}
   ],
-  news:"Welcome! Click ⚙ Edit to add classroom and school news.",
-  dates:[{date:"TBD",label:"Add your upcoming dates here"}]
+  news:"Welcome! Click ⚙ Edit to add classroom and school news."
 };
 
 let state=JSON.parse(JSON.stringify(DEFAULTS));
@@ -589,6 +583,7 @@ function renderPeriod(){
   document.getElementById('period-time-range').textContent=fmt12(p.startTime)+' – '+fmt12(p.endTime);
   document.getElementById('objective-text').textContent=shared.objective;
   renderAgenda(shared.agenda);
+  renderDates();
   renderConcertCountdown(p.name);
 }
 
@@ -640,8 +635,11 @@ function renderConcertCountdown(periodName){
 
 function renderNews(){document.getElementById('news-text').innerText=state.news;}
 function renderDates(){
+  const periods=getPeriods();
+  const p=periods.length?periods[curPeriodIdx]:null;
+  const dates=(p&&p.dates)||[];
   const l=document.getElementById('dates-list');l.innerHTML='';
-  state.dates.forEach(d=>{const li=document.createElement('li');li.className='date-item';li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span>`;l.appendChild(li);});
+  dates.forEach(d=>{const li=document.createElement('li');li.className='date-item';li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span>`;l.appendChild(li);});
 }
 
 // EDIT
@@ -656,8 +654,6 @@ function openEdit(){
   state.news=document.getElementById('news-text').innerText;
   const shared=getSharedPeriod();if(shared)shared.objective=document.getElementById('objective-text').innerText;syncParts();
   document.getElementById('edit-news').value=state.news;
-  const dc=document.getElementById('edit-dates-list');dc.innerHTML='';
-  state.dates.forEach(d=>addDateFieldVal(d.date,d.label));
   buildEditor('edit-periods-a',state.periodsA,false);
   buildEditor('edit-periods-b',state.periodsB,true);
   updateOvBtns();switchEditTab('a');
@@ -667,6 +663,7 @@ function buildEditor(cid,periods,isB){
   const c=document.getElementById(cid);c.innerHTML='';
   periods.forEach((p,pi)=>{
     const bl=document.createElement('div');bl.className='period-edit-block';bl.dataset.pi=pi;
+    const datesHtml=(p.dates||[]).map(d=>`<div class="dates-edit-item"><input class="date-input" type="text" placeholder="Mar 21" value="${d.date}"/><input class="label-input" type="text" placeholder="Event name…" value="${d.label}"/><button class="remove-btn" onclick="this.closest('.dates-edit-item').remove()">×</button></div>`).join('');
     bl.innerHTML=`<h4 class="${isB?'b':''}">${p.name}</h4>
     <div class="field-row">
       <div><label>Name</label><input class="p-name" type="text" value="${p.name}"/></div>
@@ -677,17 +674,15 @@ function buildEditor(cid,periods,isB){
     <textarea class="p-obj" rows="2" style="width:100%;font-family:'Playfair Display',serif;font-size:0.9rem;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);padding:0.3rem 0.5rem;border-radius:3px;resize:vertical;">${p.objective}</textarea></div>
     <label style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.28rem;">Agenda Items</label>
     <div class="p-agenda-list">${p.agenda.map(a=>`<div class="agenda-edit-item"><input type="text" value="${a.text}"/><button class="remove-btn" onclick="this.closest('.agenda-edit-item').remove()">×</button></div>`).join('')}</div>
-    <button class="btn" style="margin-top:0.32rem" onclick="addAgEdit(this)">+ Add Item</button>`;
+    <button class="btn" style="margin-top:0.32rem" onclick="addAgEdit(this)">+ Add Item</button>
+    <div style="margin-top:0.7rem"><label style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.28rem;">Upcoming Dates</label>
+    <div class="p-dates-list">${datesHtml}</div>
+    <button class="btn" style="margin-top:0.32rem" onclick="addDateEdit(this)">+ Add Date</button></div>`;
     c.appendChild(bl);
   });
 }
 function addAgEdit(btn){const l=btn.previousElementSibling;const r=document.createElement('div');r.className='agenda-edit-item';r.innerHTML=`<input type="text" placeholder="Agenda item…"/><button class="remove-btn" onclick="this.closest('.agenda-edit-item').remove()">×</button>`;l.appendChild(r);}
-function addDateFieldVal(date='',label=''){
-  const c=document.getElementById('edit-dates-list'),r=document.createElement('div');r.className='dates-edit-item';
-  r.innerHTML=`<input class="date-input" type="text" placeholder="Mar 21" value="${date}"/><input class="label-input" type="text" placeholder="Event name…" value="${label}"/><button class="remove-btn" onclick="this.closest('.dates-edit-item').remove()">×</button>`;
-  c.appendChild(r);
-}
-function addDateField(){addDateFieldVal();}
+function addDateEdit(btn){const l=btn.previousElementSibling;const r=document.createElement('div');r.className='dates-edit-item';r.innerHTML=`<input class="date-input" type="text" placeholder="Mar 21"/><input class="label-input" type="text" placeholder="Event name…"/><button class="remove-btn" onclick="this.closest('.dates-edit-item').remove()">×</button>`;l.appendChild(r);}
 function setDayOverride(v){state.dayOverride=v;updateOvBtns();}
 function updateOvBtns(){
   const v=state.dayOverride;
@@ -698,11 +693,6 @@ function updateOvBtns(){
 }
 function saveEdit(){
   state.news=document.getElementById('edit-news').value;
-  state.dates=[];
-  document.querySelectorAll('#edit-dates-list .dates-edit-item').forEach(r=>{
-    const d=r.querySelector('.date-input').value.trim(),l=r.querySelector('.label-input').value.trim();
-    if(d||l)state.dates.push({date:d,label:l});
-  });
   saveEdPeriods('edit-periods-a',state.periodsA);
   saveEdPeriods('edit-periods-b',state.periodsB);
   // Sync all Part X siblings in both day types
@@ -734,6 +724,12 @@ function saveEdPeriods(cid,periods){
     bl.querySelectorAll('.p-agenda-list .agenda-edit-item input').forEach((inp,ai)=>{
       const t=inp.value.trim();
       if(t) periods[pi].agenda.push({text:t, done:oldAgenda[ai]?oldAgenda[ai].done:false});
+    });
+    periods[pi].dates=[];
+    bl.querySelectorAll('.p-dates-list .dates-edit-item').forEach(row=>{
+      const date=row.querySelector('.date-input').value.trim();
+      const label=row.querySelector('.label-input').value.trim();
+      if(date||label) periods[pi].dates.push({date,label});
     });
   });
 }
