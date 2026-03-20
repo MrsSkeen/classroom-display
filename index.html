@@ -1,3 +1,6 @@
+Music classroom display · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,7 +26,7 @@
     --done:#c4a8a8;
     --accent-b:#1a3a6b;
   }
-
+ 
   body {
     font-family:'Playfair Display',serif;
     background:var(--bg);
@@ -33,7 +36,7 @@
     display:flex;
     flex-direction:column;
   }
-
+ 
   /* Subtle staff lines */
   body::before {
     content:'';
@@ -44,7 +47,7 @@
       rgba(139,26,42,0.08) 36px, rgba(139,26,42,0.08) 37px
     );
   }
-
+ 
   /* Floating note decorations */
   .note-bg {
     position:fixed; pointer-events:none; z-index:0;
@@ -56,7 +59,7 @@
   #nb3 { font-size:9rem; bottom:5%; left:0.2%; transform:rotate(-6deg); }
   #nb4 { font-size:3.5rem; top:20%; right:0.6%; transform:rotate(20deg); opacity:0.5; }
   #nb5 { font-size:5rem; bottom:18%; right:0.4%; transform:rotate(-14deg); opacity:0.4; }
-
+ 
   /* TOP BAR */
   #top-bar {
     position:relative; z-index:1;
@@ -100,7 +103,10 @@
     transition:all 0.2s; white-space:nowrap;
   }
   #settings-btn:hover { color:var(--text-primary); border-color:var(--maroon); }
-
+  #export-btn, #import-btn { background:none; border:1px solid var(--border); border-radius:3px; padding:0.22rem 0.5rem; cursor:pointer; color:var(--text-muted); font-size:0.72rem; font-family:'DM Mono',monospace; letter-spacing:0.05em; transition:all 0.2s; white-space:nowrap; }
+  #export-btn:hover { color:var(--maroon); border-color:var(--maroon); }
+  #import-btn:hover { color:var(--maroon); border-color:var(--maroon); }
+ 
   /* PERIOD STRIP */
   #period-strip {
     display:flex; align-items:center; justify-content:space-between;
@@ -122,7 +128,7 @@
     text-transform:uppercase; background:rgba(255,255,255,0.06); color:var(--text-muted);
     padding:0.14rem 0.42rem; border-radius:3px; cursor:pointer; border:1px solid var(--border);
   }
-
+ 
   /* MAIN GRID
      Col 1: Objective (top, row 1) + Timer (bottom, row 2)
      Col 2: Agenda (spans rows 1+2)
@@ -149,7 +155,7 @@
     flex-shrink:0; display:flex; align-items:center; gap:0.5rem;
   }
   .panel-label::before { content:'♩'; font-size:0.65rem; color:var(--maroon); font-style:normal; }
-
+ 
   /* OBJECTIVE — col 1, row 1 */
   #panel-objective { grid-column:1; grid-row:1; }
   #objective-text {
@@ -159,7 +165,7 @@
   #objective-text::-webkit-scrollbar { width:3px; }
   #objective-text::-webkit-scrollbar-thumb { background:var(--border); }
   #objective-text[contenteditable="true"]:focus { outline:none; }
-
+ 
   /* TIMER — col 1, row 2, horizontal layout */
   #panel-timer {
     grid-column:1; grid-row:2;
@@ -185,7 +191,7 @@
     padding:0.18rem 0.32rem; border-radius:3px; width:50px; text-align:center;
   }
   #custom-timer-input:focus { outline:none; border-color:var(--maroon); }
-
+ 
   .btn {
     font-family:'DM Mono',monospace; font-size:0.56rem; letter-spacing:0.08em;
     text-transform:uppercase; border:1px solid var(--border); background:var(--surface);
@@ -201,7 +207,7 @@
     border-radius:3px; cursor:pointer; transition:all 0.15s;
   }
   .preset-btn:hover { background:var(--maroon-dim); color:var(--gold); border-color:var(--maroon); }
-
+ 
   /* AGENDA — col 2, rows 1+2 */
   #panel-agenda { grid-column:2; grid-row:1 / 3; background:var(--surface2); }
   #agenda-list { list-style:none; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.32rem; }
@@ -230,7 +236,7 @@
   }
   #agenda-new-input:focus { outline:none; border-color:var(--maroon); }
   #agenda-new-input::placeholder { color:var(--text-muted); font-style:italic; }
-
+ 
   /* NEWS + DATES — col 3, rows 1+2 */
   #panel-news { grid-column:3; grid-row:1 / 3; padding:0; overflow:hidden; display:flex; flex-direction:column; }
   .sub-panel { flex:1; padding:0.85rem 1.1rem; overflow:hidden; display:flex; flex-direction:column; }
@@ -249,7 +255,7 @@
     flex-shrink:0; border:1px solid var(--border);
   }
   .date-label { font-size:0.86rem; color:var(--text-secondary); line-height:1.3; }
-
+ 
   /* CONCERT COUNTDOWN */
   #concert-countdown-block {
     display:flex; align-items:center; justify-content:space-between;
@@ -268,7 +274,7 @@
   .ccd-days-num.today { color:var(--gold-light); animation:pulse 1.5s ease-in-out infinite; }
   .ccd-days-num.past { color:var(--text-muted); }
   .ccd-days-lbl { font-family:'DM Mono',monospace; font-size:0.44rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); text-align:right; }
-
+ 
   /* EDIT MODAL */
   #edit-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center; }
   #edit-overlay.open { display:flex; }
@@ -312,13 +318,13 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="note-bg" id="nb1">♩</div>
 <div class="note-bg" id="nb2">♪</div>
 <div class="note-bg" id="nb3">𝄞</div>
 <div class="note-bg" id="nb4">♫</div>
 <div class="note-bg" id="nb5">♬</div>
-
+ 
 <div id="top-bar">
   <div id="top-bar-upper">
     <div id="left-bar">
@@ -331,6 +337,9 @@
         <div id="live-date">Loading...</div>
       </div>
       <button id="settings-btn" onclick="openEdit()">⚙ Edit</button>
+      <button id="export-btn" onclick="exportData()">↓ Export</button>
+      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)"/>
+      <button id="import-btn" onclick="document.getElementById('import-input').click()">↑ Import</button>
     </div>
   </div>
   <div id="period-strip" class="none">
@@ -344,14 +353,14 @@
     </div>
   </div>
 </div>
-
+ 
 <div id="main">
-
+ 
   <div class="panel" id="panel-objective">
     <div class="panel-label">Today's Objective</div>
     <div id="objective-text" contenteditable="true" spellcheck="true"></div>
   </div>
-
+ 
   <div class="panel" id="panel-agenda">
     <div class="panel-label">Agenda</div>
     <ul id="agenda-list"></ul>
@@ -360,7 +369,7 @@
       <button class="btn primary" onclick="addAgendaItem()">Add</button>
     </div>
   </div>
-
+ 
   <div class="panel" id="panel-news">
     <div class="sub-panel">
       <div class="panel-label">Upcoming Dates</div>
@@ -382,7 +391,7 @@
       <div id="news-text" contenteditable="true" spellcheck="true"></div>
     </div>
   </div>
-
+ 
   <div class="panel" id="panel-timer">
     <div id="timer-left">
       <div id="timer-label-text">countdown</div>
@@ -406,9 +415,9 @@
       </div>
     </div>
   </div>
-
+ 
 </div>
-
+ 
 <div id="edit-overlay">
   <div id="edit-modal">
     <h2>Edit Classroom Display</h2>
@@ -444,12 +453,12 @@
     </div>
   </div>
 </div>
-
+ 
 <script>
 const CAL={"2025-08-25":"A","2025-08-26":"B","2025-08-27":"A","2025-08-28":"B","2025-08-29":"A","2025-09-02":"B","2025-09-03":"A","2025-09-04":"B","2025-09-05":"A","2025-09-08":"B","2025-09-09":"A","2025-09-10":"B","2025-09-11":"A","2025-09-12":"B","2025-09-15":"A","2025-09-16":"B","2025-09-17":"A","2025-09-18":"B","2025-09-19":"A","2025-09-22":"B","2025-09-23":"A","2025-09-24":"B","2025-09-25":"A","2025-09-26":"B","2025-09-29":"A","2025-09-30":"PD","2025-10-01":"B","2025-10-02":"A","2025-10-03":"B","2025-10-06":"A","2025-10-07":"B","2025-10-08":"A","2025-10-09":"B","2025-10-10":"A","2025-10-14":"B","2025-10-15":"A","2025-10-16":"B","2025-10-17":"A","2025-10-20":"B","2025-10-21":"A","2025-10-22":"B","2025-10-23":"A","2025-10-24":"B","2025-10-27":"A","2025-10-28":"B","2025-10-29":"A","2025-10-30":"B","2025-10-31":"A","2025-11-03":"B","2025-11-04":"A","2025-11-05":"B","2025-11-06":"A","2025-11-07":"B","2025-11-10":"A","2025-11-12":"B","2025-11-13":"A","2025-11-14":"B","2025-11-17":"A","2025-11-18":"B","2025-11-19":"A","2025-11-20":"B","2025-11-21":"A","2025-11-24":"B","2025-11-25":"A","2025-12-01":"B","2025-12-02":"A","2025-12-03":"B","2025-12-04":"A","2025-12-05":"B","2025-12-08":"A","2025-12-09":"B","2025-12-10":"A","2025-12-11":"B","2025-12-12":"A","2025-12-15":"B","2025-12-16":"A","2025-12-17":"B","2025-12-18":"A","2025-12-19":"B","2026-01-06":"A","2026-01-07":"B","2026-01-08":"A","2026-01-09":"B","2026-01-12":"A","2026-01-13":"B","2026-01-14":"A","2026-01-15":"B","2026-01-16":"A","2026-01-20":"B","2026-01-21":"A","2026-01-22":"B","2026-01-23":"A","2026-01-26":"B","2026-01-27":"A","2026-01-28":"B","2026-01-29":"A","2026-01-30":"B","2026-02-02":"A","2026-02-03":"B","2026-02-04":"A","2026-02-05":"B","2026-02-06":"A","2026-02-09":"B","2026-02-10":"A","2026-02-11":"B","2026-02-12":"A","2026-02-13":"B","2026-02-17":"A","2026-02-18":"B","2026-02-19":"A","2026-02-20":"B","2026-02-23":"A","2026-02-24":"B","2026-02-25":"A","2026-02-26":"B","2026-02-27":"A","2026-03-02":"B","2026-03-03":"A","2026-03-04":"B","2026-03-05":"A","2026-03-06":"B","2026-03-09":"A","2026-03-10":"B","2026-03-11":"A","2026-03-12":"B","2026-03-13":"A","2026-03-16":"B","2026-03-17":"A","2026-03-18":"B","2026-03-19":"A","2026-03-20":"B","2026-03-23":"PD","2026-03-24":"A","2026-03-25":"B","2026-03-26":"A","2026-03-27":"B","2026-03-30":"A","2026-03-31":"B","2026-04-01":"A","2026-04-13":"B","2026-04-14":"A","2026-04-15":"B","2026-04-16":"A","2026-04-17":"B","2026-04-20":"A","2026-04-21":"B","2026-04-22":"A","2026-04-23":"B","2026-04-24":"A","2026-04-27":"B","2026-04-28":"A","2026-04-29":"B","2026-04-30":"A","2026-05-01":"B","2026-05-04":"A","2026-05-05":"B","2026-05-06":"A","2026-05-07":"B","2026-05-08":"A","2026-05-11":"B","2026-05-12":"A","2026-05-13":"B","2026-05-14":"A","2026-05-15":"B","2026-05-18":"A","2026-05-19":"B","2026-05-20":"A","2026-05-21":"B","2026-05-22":"PD","2026-05-26":"A","2026-05-27":"B","2026-05-28":"A","2026-05-29":"B","2026-06-01":"A","2026-06-02":"B","2026-06-03":"A","2026-06-04":"B","2026-06-05":"A","2026-06-08":"B","2026-06-09":"A","2026-06-10":"B","2026-06-11":"A","2026-06-12":"B","2026-06-15":"A","2026-06-16":"B","2026-06-17":"A","2026-06-18":"B","2026-06-19":"A","2026-06-22":"B","2026-06-23":"A","2026-06-24":"B","2026-06-25":"A","2026-06-26":"B","2026-06-29":"A","2026-06-30":"B"};
-
+ 
 function todayKey(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${day}`;}
-
+ 
 const DEFAULTS={
   dayOverride:'auto',
   periodsA:[
@@ -467,13 +476,13 @@ const DEFAULTS={
   ],
   news:"Welcome! Click ⚙ Edit to add classroom and school news."
 };
-
+ 
 let state=JSON.parse(JSON.stringify(DEFAULTS));
 let curPeriodIdx=0,autoMode=true,curDayType='';
-
+ 
 function getDayType(){if(state.dayOverride!=='auto')return state.dayOverride;const v=CAL[todayKey()];return(v==='A'||v==='B')?v:'none';}
 function getPeriods(){const d=getDayType();return d==='A'?state.periodsA:d==='B'?state.periodsB:[];}
-
+ 
 // TIMER
 let tSec=0,tTotal=0,tRunning=false,tIv=null;
 function setTimer(m){timerReset();tSec=m*60;tTotal=tSec;renderTimer();}
@@ -490,7 +499,7 @@ function renderTimer(){
   const el=document.getElementById('timer-display');
   if(tTotal>0){el.classList.toggle('warning',tSec/tTotal<=0.25&&tSec>0);el.classList.toggle('urgent',tSec<=0);}
 }
-
+ 
 // CLOCK
 function updateClock(){
   const n=new Date(),h=n.getHours(),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');
@@ -500,9 +509,9 @@ function updateClock(){
   document.getElementById('live-date').textContent=`${D[n.getDay()]} · ${M[n.getMonth()]} ${n.getDate()}, ${n.getFullYear()}`;
   autoSwitch(n);
 }
-
+ 
 function pt(str){const[h,m]=str.split(':').map(Number);return h*60+m;}
-
+ 
 function autoSwitch(now){
   const newDay=getDayType();
   if(newDay!==curDayType){curDayType=newDay;curPeriodIdx=0;renderDayBadge();renderTabs();renderPeriod();}
@@ -520,14 +529,14 @@ function autoSwitch(now){
     document.getElementById('period-countdown').textContent=newDay==='none'?'No school today':'—';
   }
 }
-
+ 
 function renderDayBadge(){
   const b=document.getElementById('day-badge'),strip=document.getElementById('period-strip');
   if(curDayType==='A'){b.className='A';b.textContent='A Day';if(strip)strip.className='A';}
   else if(curDayType==='B'){b.className='B';b.textContent='B Day';if(strip)strip.className='B';}
   else{b.className='none';b.textContent='No Class';if(strip)strip.className='none';}
 }
-
+ 
 function renderTabs(){
   const c=document.getElementById('class-tabs');c.innerHTML='';
   const periods=getPeriods(),isB=curDayType==='B';
@@ -539,7 +548,7 @@ function renderTabs(){
     c.appendChild(btn);
   });
 }
-
+ 
 // Returns the canonical period for shared objective/agenda.
 // If the active period is a "Part X" variant, all parts share the first sibling's data.
 function getSharedPeriod(){
@@ -551,7 +560,7 @@ function getSharedPeriod(){
   const first=periods.find(x=>x.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim()===baseName);
   return first||p;
 }
-
+ 
 // Sync all Part X siblings to match the canonical period's objective + agenda
 function syncParts(){
   const periods=getPeriods();
@@ -565,7 +574,7 @@ function syncParts(){
     if(xBase===baseName){x.objective=canonical.objective;x.agenda=canonical.agenda;}
   });
 }
-
+ 
 function renderPeriod(){
   const periods=getPeriods();
   if(!periods.length){
@@ -586,9 +595,9 @@ function renderPeriod(){
   renderDates();
   renderConcertCountdown(p.name);
 }
-
+ 
 function fmt12(str){const[h,m]=str.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}
-
+ 
 function renderAgenda(items){
   const list=document.getElementById('agenda-list');list.innerHTML='';
   (items||[]).forEach(item=>{
@@ -599,7 +608,7 @@ function renderAgenda(items){
     list.appendChild(li);
   });
 }
-
+ 
 function addAgendaItem(){
   const inp=document.getElementById('agenda-new-input'),text=inp.value.trim();
   if(!text)return;
@@ -607,7 +616,7 @@ function addAgendaItem(){
   shared.agenda.push({text,done:false});syncParts();inp.value='';saveState();renderAgenda(shared.agenda);
 }
 document.getElementById('agenda-new-input').addEventListener('keydown',e=>{if(e.key==='Enter')addAgendaItem();});
-
+ 
 // CONCERT COUNTDOWN
 const CONCERT_DATES=[
   {keywords:['6','sixth'],grade:'6th Grade',name:'Spring Concert',date:'2026-05-13',display:'May 13, 2026'},
@@ -632,7 +641,7 @@ function renderConcertCountdown(periodName){
   else{numEl.textContent=diff;if(diff<=7)numEl.classList.add('soon');lblEl.textContent=diff===1?'day away':'days away';}
   block.classList.remove('hidden');
 }
-
+ 
 function renderNews(){document.getElementById('news-text').innerText=state.news;}
 function renderDates(){
   const periods=getPeriods();
@@ -641,7 +650,7 @@ function renderDates(){
   const l=document.getElementById('dates-list');l.innerHTML='';
   dates.forEach(d=>{const li=document.createElement('li');li.className='date-item';li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span>`;l.appendChild(li);});
 }
-
+ 
 // EDIT
 let activeTab='a';
 function switchEditTab(tab){
@@ -735,17 +744,52 @@ function saveEdPeriods(cid,periods){
 }
 function closeEdit(){document.getElementById('edit-overlay').classList.remove('open');}
 document.getElementById('edit-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('edit-overlay'))closeEdit();});
-
+ 
+// ── EXPORT / IMPORT ──
+function exportData(){
+  const json=JSON.stringify(state,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const d=new Date();
+  a.download='classroom-display-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+ 
+function importData(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const loaded=JSON.parse(e.target.result);
+      if(loaded&&loaded.periodsA){
+        state=loaded;
+        curDayType='';curPeriodIdx=0;autoMode=true;
+        renderDayBadge();renderTabs();renderPeriod();renderNews();renderDates();
+        showSyncStatus('✓ Imported!');
+      } else {
+        showSyncStatus('⚠ Invalid file','var(--maroon)');
+      }
+    } catch(err){
+      showSyncStatus('⚠ Could not read file','var(--maroon)');
+    }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+ 
 // ── GOOGLE SHEETS SYNC ──
 const API_URL='https://script.google.com/macros/s/AKfycbyw4cWv9oNkqsyfTBc0QNO2jkqfc1k4RyAS9RDYeB-QQfcqjAMtO_817Sc49LHDGIkPDg/exec';
-
+ 
 function showSyncStatus(msg,color='var(--text-muted)'){
   let el=document.getElementById('sync-status');
   if(!el){el=document.createElement('div');el.id='sync-status';Object.assign(el.style,{position:'fixed',bottom:'0.6rem',right:'0.8rem',fontFamily:"'DM Mono',monospace",fontSize:'0.5rem',letterSpacing:'0.1em',textTransform:'uppercase',padding:'0.2rem 0.5rem',borderRadius:'3px',background:'rgba(247,242,238,0.92)',border:'1px solid var(--border)',zIndex:'999',transition:'opacity 0.4s'});document.body.appendChild(el);}
   el.style.color=color;el.style.opacity='1';el.textContent=msg;
   if(color!=='var(--maroon)') setTimeout(()=>{el.style.opacity='0';},3000);
 }
-
+ 
 async function saveState(){
   showSyncStatus('Saving…','var(--text-muted)');
   try{
@@ -762,7 +806,7 @@ async function saveState(){
     showSyncStatus('⚠ Save failed — no internet?','var(--maroon)');
   }
 }
-
+ 
 async function loadState(){
   showSyncStatus('Loading…','var(--text-muted)');
   try{
@@ -780,10 +824,10 @@ async function loadState(){
   renderDayBadge();renderTabs();renderPeriod();renderNews();renderDates();
   updateClock();setInterval(updateClock,1000);
 }
-
+ 
 document.getElementById('objective-text').addEventListener('blur',()=>{const shared=getSharedPeriod();if(shared){shared.objective=document.getElementById('objective-text').innerText;syncParts();}saveState();});
 document.getElementById('news-text').addEventListener('blur',()=>{state.news=document.getElementById('news-text').innerText;saveState();});
-
+ 
 // INIT — load from Google Sheets first, then start
 loadState();
 </script>
