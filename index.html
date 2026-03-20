@@ -1,1 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Classroom Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#f7f2ee;
+    --surface:#ffffff;
+    --surface2:#fdf6f3;
+    --border:#e0ccc8;
+    --maroon:#8b1a2a;
+    --maroon-bright:#b52035;
+    --maroon-dim:#fce8ea;
+    --gold:#a07820;
+    --gold-light:#c49a28;
+    --text-primary:#1a0a0e;
+    --text-secondary:#4a2830;
+    --text-muted:#a07880;
+    --done:#c4a8a8;
+    --accent-b:#1a3a6b;
+  }
 
+  body {
+    font-family:'Playfair Display',serif;
+    background:var(--bg);
+    color:var(--text-primary);
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Subtle staff lines */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    pointer-events:none; z-index:0;
+    background-image:repeating-linear-gradient(
+      transparent, transparent 36px,
+      rgba(139,26,42,0.08) 36px, rgba(139,26,42,0.08) 37px
+    );
+  }
+
+  /* Floating note decorations */
+  .note-bg {
+    position:fixed; pointer-events:none; z-index:0;
+    color:rgba(139,26,42,0.13); user-select:none; line-height:1;
+    font-family:serif;
+  }
+  #nb1 { font-size:7rem; top:12%; left:0.4%; transform:rotate(-18deg); }
+  #nb2 { font-size:4rem; top:52%; left:0.5%; transform:rotate(12deg); }
+  #nb3 { font-size:9rem; bottom:5%; left:0.2%; transform:rotate(-6deg); }
+  #nb4 { font-size:3.5rem; top:20%; right:0.6%; transform:rotate(20deg); opacity:0.5; }
+  #nb5 { font-size:5rem; bottom:18%; right:0.4%; transform:rotate(-14deg); opacity:0.4; }
+
+  /* TOP BAR */
+  #top-bar {
+    position:relative; z-index:1;
+    display:flex; flex-direction:column;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  #top-bar-upper {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 1.4rem; height:46px; gap:1rem;
+    border-bottom:1px solid var(--border);
+  }
+  #left-bar { display:flex; align-items:center; gap:0.8rem; overflow:hidden; }
+  #day-badge {
+    font-family:'DM Mono',monospace; font-size:0.66rem; font-weight:400;
+    letter-spacing:0.14em; padding:0.2rem 0.7rem; border-radius:3px;
+    text-transform:uppercase; flex-shrink:0; transition:all 0.3s;
+  }
+  #day-badge.A { background:var(--maroon); color:#fff; border:1px solid var(--maroon-bright); }
+  #day-badge.B { background:var(--accent-b); color:#fff; border:1px solid #2a5ab0; }
+  #day-badge.none { background:var(--border); color:var(--text-muted); border:1px solid transparent; }
+  #class-tabs { display:flex; gap:0.18rem; overflow-x:auto; }
+  #class-tabs::-webkit-scrollbar { height:0; }
+  .class-tab {
+    padding:0.22rem 0.75rem; border-radius:3px;
+    font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.07em;
+    text-transform:uppercase; cursor:pointer; border:1px solid transparent;
+    color:var(--text-muted); background:transparent; transition:all 0.2s;
+    white-space:nowrap; flex-shrink:0;
+  }
+  .class-tab:hover { background:var(--maroon-dim); color:var(--text-secondary); border-color:var(--border); }
+  .class-tab.active { background:var(--maroon); color:#fff; border-color:var(--maroon-bright); }
+  .class-tab.active.b-day { background:var(--accent-b); border-color:#2a5ab0; }
+  #top-right { display:flex; align-items:center; gap:1.1rem; flex-shrink:0; }
+  #live-clock { font-family:'DM Mono',monospace; font-size:1.5rem; font-weight:300; color:var(--maroon); letter-spacing:0.04em; }
+  #live-date { font-family:'DM Mono',monospace; font-size:0.54rem; color:var(--text-muted); letter-spacing:0.1em; text-transform:uppercase; text-align:right; }
+  #settings-btn {
+    background:none; border:1px solid var(--border); border-radius:3px;
+    padding:0.22rem 0.5rem; cursor:pointer; color:var(--text-muted); font-size:0.8rem;
+    transition:all 0.2s; white-space:nowrap;
+  }
+  #settings-btn:hover { color:var(--text-primary); border-color:var(--maroon); }
+
+  /* PERIOD STRIP */
+  #period-strip {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0.65rem 1.4rem; transition:background 0.4s, border-color 0.4s;
+    border-top:2px solid transparent; flex-shrink:0;
+  }
+  #period-strip.A { background:linear-gradient(90deg,rgba(139,26,42,0.12) 0%,rgba(139,26,42,0.04) 60%,transparent 100%); border-top-color:var(--maroon); }
+  #period-strip.B { background:linear-gradient(90deg,rgba(26,58,107,0.12) 0%,rgba(26,58,107,0.04) 60%,transparent 100%); border-top-color:#2a5ab0; }
+  #period-strip.none { background:transparent; border-top-color:var(--border); }
+  #period-left { display:flex; align-items:baseline; gap:1rem; }
+  #period-name { font-size:2rem; font-weight:700; color:var(--maroon); line-height:1; }
+  #period-strip.A #period-name { color:var(--maroon); }
+  #period-strip.B #period-name { color:#1a3a6b; }
+  #period-time-range { font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--text-secondary); letter-spacing:0.05em; }
+  #period-right { display:flex; align-items:center; gap:0.7rem; }
+  #period-countdown { font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--text-secondary); white-space:nowrap; }
+  #auto-switch-badge {
+    font-family:'DM Mono',monospace; font-size:0.48rem; letter-spacing:0.1em;
+    text-transform:uppercase; background:rgba(255,255,255,0.06); color:var(--text-muted);
+    padding:0.14rem 0.42rem; border-radius:3px; cursor:pointer; border:1px solid var(--border);
+  }
+
+  /* MAIN GRID
+     Col 1: Objective (top, row 1) + Timer (bottom, row 2)
+     Col 2: Agenda (spans rows 1+2)
+     Col 3: News/Dates (spans rows 1+2)
+  */
+  #main {
+    position:relative; z-index:1; flex:1;
+    display:grid;
+    grid-template-columns:1.1fr 1fr 0.8fr;
+    grid-template-rows:1fr auto;
+    gap:1px;
+    background:var(--border);
+    overflow:hidden;
+  }
+  .panel {
+    background:var(--surface);
+    padding:1.1rem 1.4rem;
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .panel-label {
+    font-family:'DM Mono',monospace; font-size:0.52rem; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--text-muted); margin-bottom:0.55rem;
+    flex-shrink:0; display:flex; align-items:center; gap:0.5rem;
+  }
+  .panel-label::before { content:'♩'; font-size:0.65rem; color:var(--maroon); font-style:normal; }
+
+  /* OBJECTIVE — col 1, row 1 */
+  #panel-objective { grid-column:1; grid-row:1; }
+  #objective-text {
+    font-size:1.45rem; font-weight:400; line-height:1.65;
+    color:var(--text-primary); font-style:italic; flex:1; overflow-y:auto;
+  }
+  #objective-text::-webkit-scrollbar { width:3px; }
+  #objective-text::-webkit-scrollbar-thumb { background:var(--border); }
+  #objective-text[contenteditable="true"]:focus { outline:none; }
+
+  /* TIMER — col 1, row 2, horizontal layout */
+  #panel-timer {
+    grid-column:1; grid-row:2;
+    background:var(--maroon-dim);
+    border-top:2px solid var(--maroon);
+    flex-direction:row;
+    gap:1.4rem;
+    padding:0.75rem 1.4rem;
+  }
+  #timer-left { display:flex; flex-direction:column; align-items:center; flex-shrink:0; gap:0.2rem; }
+  #timer-label-text { font-family:'DM Mono',monospace; font-size:0.5rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-muted); }
+  #timer-display { font-family:'DM Mono',monospace; font-size:3rem; font-weight:300; letter-spacing:-0.02em; color:var(--maroon); line-height:1; }
+  #timer-display.warning { color:#e08040; }
+  #timer-display.urgent { color:#ff5050; animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  #timer-controls { display:flex; gap:0.38rem; }
+  #timer-right { display:flex; flex-direction:column; gap:0.32rem; flex:1; min-width:100px; }
+  #timer-presets { display:flex; gap:0.22rem; flex-wrap:wrap; }
+  #custom-timer-row { display:flex; gap:0.28rem; align-items:center; }
+  #custom-timer-input {
+    font-family:'DM Mono',monospace; font-size:0.66rem;
+    border:1px solid var(--border); background:var(--bg); color:var(--text-primary);
+    padding:0.18rem 0.32rem; border-radius:3px; width:50px; text-align:center;
+  }
+  #custom-timer-input:focus { outline:none; border-color:var(--maroon); }
+
+  .btn {
+    font-family:'DM Mono',monospace; font-size:0.56rem; letter-spacing:0.08em;
+    text-transform:uppercase; border:1px solid var(--border); background:var(--surface);
+    color:var(--text-secondary); padding:0.26rem 0.6rem; border-radius:3px;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .btn:hover { background:var(--maroon-dim); color:var(--text-primary); border-color:var(--maroon); }
+  .btn.primary { background:var(--maroon); color:#fff; border-color:var(--maroon-bright); }
+  .btn.primary:hover { background:var(--maroon-bright); }
+  .preset-btn {
+    font-family:'DM Mono',monospace; font-size:0.52rem; border:1px solid var(--border);
+    background:transparent; color:var(--text-muted); padding:0.13rem 0.35rem;
+    border-radius:3px; cursor:pointer; transition:all 0.15s;
+  }
+  .preset-btn:hover { background:var(--maroon-dim); color:var(--gold); border-color:var(--maroon); }
+
+  /* AGENDA — col 2, rows 1+2 */
+  #panel-agenda { grid-column:2; grid-row:1 / 3; background:var(--surface2); }
+  #agenda-list { list-style:none; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.32rem; }
+  #agenda-list::-webkit-scrollbar { width:3px; }
+  #agenda-list::-webkit-scrollbar-thumb { background:var(--border); }
+  .agenda-item {
+    display:flex; align-items:flex-start; gap:0.6rem;
+    padding:0.38rem 0.48rem; border-radius:3px;
+    transition:background 0.15s; cursor:pointer; user-select:none;
+    border:1px solid transparent;
+  }
+  .agenda-item:hover { background:var(--maroon-dim); border-color:var(--border); }
+  .agenda-check {
+    width:14px; height:14px; border:1.5px solid var(--border); border-radius:2px;
+    flex-shrink:0; margin-top:3px; transition:all 0.2s;
+    display:flex; align-items:center; justify-content:center; font-size:9px;
+  }
+  .agenda-item.done .agenda-check { background:var(--maroon); border-color:var(--maroon-bright); color:#fff; }
+  .agenda-item-text { font-size:0.95rem; line-height:1.4; color:var(--text-secondary); flex:1; }
+  .agenda-item.done .agenda-item-text { color:var(--done); text-decoration:line-through; }
+  #agenda-add-row { display:flex; gap:0.38rem; margin-top:0.5rem; flex-shrink:0; }
+  #agenda-new-input {
+    flex:1; font-family:'Playfair Display',serif; font-size:0.86rem;
+    border:1px solid var(--border); background:var(--bg); color:var(--text-primary);
+    padding:0.22rem 0.48rem; border-radius:3px;
+  }
+  #agenda-new-input:focus { outline:none; border-color:var(--maroon); }
+  #agenda-new-input::placeholder { color:var(--text-muted); font-style:italic; }
+
+  /* NEWS + DATES — col 3, rows 1+2 */
+  #panel-news { grid-column:3; grid-row:1 / 3; padding:0; overflow:hidden; display:flex; flex-direction:column; }
+  .sub-panel { flex:1; padding:0.85rem 1.1rem; overflow:hidden; display:flex; flex-direction:column; }
+  .sub-panel+.sub-panel { border-top:1px solid var(--border); }
+  .sub-panel .panel-label { margin-bottom:0.45rem; }
+  #news-text { font-size:0.86rem; line-height:1.7; color:var(--text-secondary); flex:1; overflow-y:auto; white-space:pre-wrap; }
+  #news-text::-webkit-scrollbar { width:3px; }
+  #news-text::-webkit-scrollbar-thumb { background:var(--border); }
+  #news-text[contenteditable="true"]:focus { outline:none; }
+  #dates-list { list-style:none; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.32rem; }
+  .date-item { display:flex; align-items:baseline; gap:0.45rem; }
+  .date-pill {
+    font-family:'DM Mono',monospace; font-size:0.52rem;
+    background:var(--maroon-dim); color:var(--maroon);
+    padding:0.07rem 0.35rem; border-radius:3px; white-space:nowrap;
+    flex-shrink:0; border:1px solid var(--border);
+  }
+  .date-label { font-size:0.86rem; color:var(--text-secondary); line-height:1.3; }
+
+  /* CONCERT COUNTDOWN */
+  #concert-countdown-block {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0.5rem 0.6rem; border-radius:4px;
+    background:var(--maroon-dim); margin-bottom:0.5rem; flex-shrink:0;
+    border:1px solid var(--maroon);
+  }
+  #concert-countdown-block.hidden { display:none; }
+  .ccd-info { display:flex; flex-direction:column; gap:0.1rem; }
+  .ccd-label { font-family:'DM Mono',monospace; font-size:0.48rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--maroon-bright); }
+  .ccd-name { font-size:0.92rem; color:var(--text-primary); line-height:1.2; }
+  .ccd-date { font-family:'DM Mono',monospace; font-size:0.52rem; color:var(--text-muted); }
+  .ccd-days { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; }
+  .ccd-days-num { font-family:'DM Mono',monospace; font-size:1.9rem; font-weight:300; line-height:1; color:var(--maroon); }
+  .ccd-days-num.soon { color:#e08040; }
+  .ccd-days-num.today { color:var(--gold-light); animation:pulse 1.5s ease-in-out infinite; }
+  .ccd-days-num.past { color:var(--text-muted); }
+  .ccd-days-lbl { font-family:'DM Mono',monospace; font-size:0.44rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); text-align:right; }
+
+  /* EDIT MODAL */
+  #edit-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center; }
+  #edit-overlay.open { display:flex; }
+  #edit-modal { background:#fff; border:1px solid var(--maroon); border-radius:6px; padding:1.8rem; width:660px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  #edit-modal h2 { font-size:1.3rem; font-weight:400; margin-bottom:1.2rem; color:var(--text-primary); }
+  .edit-tabs { display:flex; gap:0.35rem; margin-bottom:1.2rem; border-bottom:1px solid var(--border); padding-bottom:0.65rem; flex-wrap:wrap; }
+  .edit-tab { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.24rem 0.62rem; border-radius:3px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all 0.15s; }
+  .edit-tab:hover { background:var(--maroon-dim); color:var(--text-secondary); }
+  .edit-tab.active { background:var(--maroon); color:#fff; border-color:var(--maroon-bright); }
+  .edit-tab.active.b { background:var(--accent-b); border-color:#2a5ab0; }
+  .edit-pane { display:none; }
+  .edit-pane.active { display:block; }
+  .edit-section { margin-bottom:1.1rem; }
+  .edit-section>label { display:block; font-family:'DM Mono',monospace; font-size:0.52rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.28rem; }
+  .edit-section input,.edit-section textarea { width:100%; font-family:'Playfair Display',serif; font-size:0.92rem; border:1px solid var(--border); background:var(--bg); color:var(--text-primary); padding:0.38rem 0.55rem; border-radius:3px; resize:vertical; }
+  .edit-section input:focus,.edit-section textarea:focus { outline:none; border-color:var(--maroon); }
+  .period-edit-block { border:1px solid var(--border); border-radius:5px; padding:0.82rem; margin-bottom:0.75rem; background:var(--bg); }
+  .period-edit-block h4 { font-family:'DM Mono',monospace; font-size:0.56rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--maroon-bright); margin-bottom:0.58rem; }
+  .period-edit-block h4.b { color:#5a8ae0; }
+  .field-row { display:flex; gap:0.48rem; margin-bottom:0.45rem; }
+  .field-row label { font-family:'DM Mono',monospace; font-size:0.48rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.15rem; display:block; }
+  .field-row>div { flex:1; }
+  .field-row input { width:100%; font-family:'DM Mono',monospace; font-size:0.72rem; border:1px solid var(--border); background:var(--surface); color:var(--text-primary); padding:0.25rem 0.38rem; border-radius:3px; }
+  .field-row input:focus { outline:none; border-color:var(--maroon); }
+  .agenda-edit-item { display:flex; gap:0.3rem; margin-bottom:0.28rem; align-items:center; }
+  .agenda-edit-item input { flex:1; font-family:'Playfair Display',serif; font-size:0.84rem; border:1px solid var(--border); background:var(--surface); color:var(--text-primary); padding:0.22rem 0.38rem; border-radius:3px; }
+  .agenda-edit-item input:focus { outline:none; border-color:var(--maroon); }
+  .remove-btn { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:0.13rem 0.3rem; border-radius:3px; }
+  .remove-btn:hover { background:var(--maroon-dim); color:var(--maroon-bright); }
+  .dates-edit-item { display:flex; gap:0.3rem; margin-bottom:0.28rem; align-items:center; }
+  .dates-edit-item input.date-input { width:84px; font-family:'DM Mono',monospace; font-size:0.66rem; }
+  .dates-edit-item input.label-input { flex:1; font-family:'Playfair Display',serif; font-size:0.84rem; }
+  .dates-edit-item input { border:1px solid var(--border); background:var(--surface); color:var(--text-primary); padding:0.22rem 0.38rem; border-radius:3px; }
+  .dates-edit-item input:focus { outline:none; border-color:var(--maroon); }
+  .day-override-row { display:flex; gap:0.38rem; flex-wrap:wrap; }
+  .day-toggle-btn { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; padding:0.26rem 0.65rem; border-radius:3px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all 0.15s; }
+  .day-toggle-btn.sel-auto,.day-toggle-btn.sel-a { background:var(--maroon); color:#fff; border-color:var(--maroon-bright); }
+  .day-toggle-btn.sel-b { background:var(--accent-b); color:#fff; border-color:#2a5ab0; }
+  .day-toggle-btn.sel-none { background:var(--border); color:var(--text-muted); }
+  #edit-footer { display:flex; justify-content:flex-end; gap:0.58rem; margin-top:1.2rem; padding-top:0.85rem; border-top:1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="note-bg" id="nb1">♩</div>
+<div class="note-bg" id="nb2">♪</div>
+<div class="note-bg" id="nb3">𝄞</div>
+<div class="note-bg" id="nb4">♫</div>
+<div class="note-bg" id="nb5">♬</div>
+
+<div id="top-bar">
+  <div id="top-bar-upper">
+    <div id="left-bar">
+      <div id="day-badge" class="none">— Day</div>
+      <div id="class-tabs"></div>
+    </div>
+    <div id="top-right">
+      <div>
+        <div id="live-clock">--:-- --</div>
+        <div id="live-date">Loading...</div>
+      </div>
+      <button id="settings-btn" onclick="openEdit()">⚙ Edit</button>
+    </div>
+  </div>
+  <div id="period-strip" class="none">
+    <div id="period-left">
+      <div id="period-name">—</div>
+      <div id="period-time-range">—</div>
+    </div>
+    <div id="period-right">
+      <div id="period-countdown">—</div>
+      <div id="auto-switch-badge">● Auto</div>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+
+  <div class="panel" id="panel-objective">
+    <div class="panel-label">Today's Objective</div>
+    <div id="objective-text" contenteditable="true" spellcheck="true"></div>
+  </div>
+
+  <div class="panel" id="panel-agenda">
+    <div class="panel-label">Agenda</div>
+    <ul id="agenda-list"></ul>
+    <div id="agenda-add-row">
+      <input id="agenda-new-input" type="text" placeholder="Add item…"/>
+      <button class="btn primary" onclick="addAgendaItem()">Add</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-news">
+    <div class="sub-panel">
+      <div class="panel-label">Upcoming Dates</div>
+      <div id="concert-countdown-block" class="hidden">
+        <div class="ccd-info">
+          <div class="ccd-label" id="ccd-grade">Concert</div>
+          <div class="ccd-name" id="ccd-name">Spring Concert</div>
+          <div class="ccd-date" id="ccd-date"></div>
+        </div>
+        <div class="ccd-days">
+          <div class="ccd-days-num" id="ccd-num">—</div>
+          <div class="ccd-days-lbl" id="ccd-lbl">days away</div>
+        </div>
+      </div>
+      <ul id="dates-list"></ul>
+    </div>
+    <div class="sub-panel">
+      <div class="panel-label">Classroom &amp; School News</div>
+      <div id="news-text" contenteditable="true" spellcheck="true"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-timer">
+    <div id="timer-left">
+      <div id="timer-label-text">countdown</div>
+      <div id="timer-display">00:00</div>
+      <div id="timer-controls">
+        <button class="btn primary" id="timer-start-btn" onclick="timerStartStop()">Start</button>
+        <button class="btn" onclick="timerReset()">Reset</button>
+      </div>
+    </div>
+    <div id="timer-right">
+      <div id="timer-presets">
+        <button class="preset-btn" onclick="setTimer(2)">2m</button>
+        <button class="preset-btn" onclick="setTimer(5)">5m</button>
+        <button class="preset-btn" onclick="setTimer(10)">10m</button>
+        <button class="preset-btn" onclick="setTimer(15)">15m</button>
+        <button class="preset-btn" onclick="setTimer(20)">20m</button>
+      </div>
+      <div id="custom-timer-row">
+        <input id="custom-timer-input" type="number" placeholder="min" min="1" max="120"/>
+        <button class="btn" onclick="setCustomTimer()">Set</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="edit-overlay">
+  <div id="edit-modal">
+    <h2>Edit Classroom Display</h2>
+    <div class="edit-tabs">
+      <button class="edit-tab active" onclick="switchEditTab('a')">A Day Periods</button>
+      <button class="edit-tab b" onclick="switchEditTab('b')">B Day Periods</button>
+      <button class="edit-tab" onclick="switchEditTab('general')">News &amp; Dates</button>
+      <button class="edit-tab" onclick="switchEditTab('override')">Day Override</button>
+    </div>
+    <div class="edit-pane active" id="pane-a"><div id="edit-periods-a"></div></div>
+    <div class="edit-pane" id="pane-b"><div id="edit-periods-b"></div></div>
+    <div class="edit-pane" id="pane-general">
+      <div class="edit-section">
+        <label>Classroom &amp; School News</label>
+        <textarea id="edit-news" rows="4" placeholder="Enter news or announcements…"></textarea>
+      </div>
+    </div>
+    <div class="edit-pane" id="pane-override">
+      <div class="edit-section">
+        <label>Today's Day Type</label>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;line-height:1.5;">Auto-detects A/B days from your BCPS calendar. Use this to override for schedule changes.</p>
+        <div class="day-override-row">
+          <button class="day-toggle-btn" id="ov-auto" onclick="setDayOverride('auto')">Auto-detect</button>
+          <button class="day-toggle-btn" id="ov-a" onclick="setDayOverride('A')">Force A Day</button>
+          <button class="day-toggle-btn" id="ov-b" onclick="setDayOverride('B')">Force B Day</button>
+          <button class="day-toggle-btn" id="ov-none" onclick="setDayOverride('none')">No Class Today</button>
+        </div>
+      </div>
+    </div>
+    <div id="edit-footer">
+      <button class="btn" onclick="closeEdit()">Cancel</button>
+      <button class="btn primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAL={"2025-08-25":"A","2025-08-26":"B","2025-08-27":"A","2025-08-28":"B","2025-08-29":"A","2025-09-02":"B","2025-09-03":"A","2025-09-04":"B","2025-09-05":"A","2025-09-08":"B","2025-09-09":"A","2025-09-10":"B","2025-09-11":"A","2025-09-12":"B","2025-09-15":"A","2025-09-16":"B","2025-09-17":"A","2025-09-18":"B","2025-09-19":"A","2025-09-22":"B","2025-09-23":"A","2025-09-24":"B","2025-09-25":"A","2025-09-26":"B","2025-09-29":"A","2025-09-30":"PD","2025-10-01":"B","2025-10-02":"A","2025-10-03":"B","2025-10-06":"A","2025-10-07":"B","2025-10-08":"A","2025-10-09":"B","2025-10-10":"A","2025-10-14":"B","2025-10-15":"A","2025-10-16":"B","2025-10-17":"A","2025-10-20":"B","2025-10-21":"A","2025-10-22":"B","2025-10-23":"A","2025-10-24":"B","2025-10-27":"A","2025-10-28":"B","2025-10-29":"A","2025-10-30":"B","2025-10-31":"A","2025-11-03":"B","2025-11-04":"A","2025-11-05":"B","2025-11-06":"A","2025-11-07":"B","2025-11-10":"A","2025-11-12":"B","2025-11-13":"A","2025-11-14":"B","2025-11-17":"A","2025-11-18":"B","2025-11-19":"A","2025-11-20":"B","2025-11-21":"A","2025-11-24":"B","2025-11-25":"A","2025-12-01":"B","2025-12-02":"A","2025-12-03":"B","2025-12-04":"A","2025-12-05":"B","2025-12-08":"A","2025-12-09":"B","2025-12-10":"A","2025-12-11":"B","2025-12-12":"A","2025-12-15":"B","2025-12-16":"A","2025-12-17":"B","2025-12-18":"A","2025-12-19":"B","2026-01-06":"A","2026-01-07":"B","2026-01-08":"A","2026-01-09":"B","2026-01-12":"A","2026-01-13":"B","2026-01-14":"A","2026-01-15":"B","2026-01-16":"A","2026-01-20":"B","2026-01-21":"A","2026-01-22":"B","2026-01-23":"A","2026-01-26":"B","2026-01-27":"A","2026-01-28":"B","2026-01-29":"A","2026-01-30":"B","2026-02-02":"A","2026-02-03":"B","2026-02-04":"A","2026-02-05":"B","2026-02-06":"A","2026-02-09":"B","2026-02-10":"A","2026-02-11":"B","2026-02-12":"A","2026-02-13":"B","2026-02-17":"A","2026-02-18":"B","2026-02-19":"A","2026-02-20":"B","2026-02-23":"A","2026-02-24":"B","2026-02-25":"A","2026-02-26":"B","2026-02-27":"A","2026-03-02":"B","2026-03-03":"A","2026-03-04":"B","2026-03-05":"A","2026-03-06":"B","2026-03-09":"A","2026-03-10":"B","2026-03-11":"A","2026-03-12":"B","2026-03-13":"A","2026-03-16":"B","2026-03-17":"A","2026-03-18":"B","2026-03-19":"A","2026-03-20":"B","2026-03-23":"PD","2026-03-24":"A","2026-03-25":"B","2026-03-26":"A","2026-03-27":"B","2026-03-30":"A","2026-03-31":"B","2026-04-01":"A","2026-04-13":"B","2026-04-14":"A","2026-04-15":"B","2026-04-16":"A","2026-04-17":"B","2026-04-20":"A","2026-04-21":"B","2026-04-22":"A","2026-04-23":"B","2026-04-24":"A","2026-04-27":"B","2026-04-28":"A","2026-04-29":"B","2026-04-30":"A","2026-05-01":"B","2026-05-04":"A","2026-05-05":"B","2026-05-06":"A","2026-05-07":"B","2026-05-08":"A","2026-05-11":"B","2026-05-12":"A","2026-05-13":"B","2026-05-14":"A","2026-05-15":"B","2026-05-18":"A","2026-05-19":"B","2026-05-20":"A","2026-05-21":"B","2026-05-22":"PD","2026-05-26":"A","2026-05-27":"B","2026-05-28":"A","2026-05-29":"B","2026-06-01":"A","2026-06-02":"B","2026-06-03":"A","2026-06-04":"B","2026-06-05":"A","2026-06-08":"B","2026-06-09":"A","2026-06-10":"B","2026-06-11":"A","2026-06-12":"B","2026-06-15":"A","2026-06-16":"B","2026-06-17":"A","2026-06-18":"B","2026-06-19":"A","2026-06-22":"B","2026-06-23":"A","2026-06-24":"B","2026-06-25":"A","2026-06-26":"B","2026-06-29":"A","2026-06-30":"B"};
+
+function todayKey(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${day}`;}
+
+const DEFAULTS={
+  dayOverride:'auto',
+  periodsA:[
+    {name:"Strings 8",startTime:"08:10",endTime:"09:41",objective:"Students will perform with proper tone and bow technique.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale practice",done:false},{text:"Rehearse current piece",done:false},{text:"Section work",done:false}],dates:[]},
+    {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}],dates:[]},
+    {name:"Percussion 6",startTime:"12:08",endTime:"13:38",objective:"Students will develop rhythmic accuracy and mallet technique.",agenda:[{text:"Warm-up: rudiments",done:false},{text:"Rhythm exercises",done:false},{text:"Rehearse current piece",done:false}],dates:[]},
+    {name:"Percussion 7",startTime:"13:41",endTime:"15:00",objective:"Students will apply dynamic contrast in ensemble playing.",agenda:[{text:"Warm-up: stick control",done:false},{text:"Dynamic exercises",done:false},{text:"Ensemble rehearsal",done:false}],dates:[]}
+  ],
+  periodsB:[
+    {name:"Brass 7",startTime:"08:10",endTime:"09:41",objective:"Students will play scales with consistent tone and intonation.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale/arpeggio practice",done:false},{text:"Rehearse concert piece",done:false}],dates:[]},
+    {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}],dates:[]},
+    {name:"Brass 7 (Part 1)",startTime:"11:38",endTime:"12:36",objective:"Students will sight-read and rehearse new material.",agenda:[{text:"Sight-reading exercise",done:false},{text:"Section rehearsal",done:false}],dates:[]},
+    {name:"Brass 7 (Part 2)",startTime:"13:08",endTime:"13:38",objective:"Students will focus on balance and blend.",agenda:[{text:"Balance/blend exercises",done:false},{text:"Full run-through",done:false}],dates:[]},
+    {name:"Strings 8",startTime:"13:41",endTime:"15:00",objective:"Students will refine bowing technique and musical expression.",agenda:[{text:"Warm-up: scales",done:false},{text:"Bowing technique drill",done:false},{text:"Expression/dynamics",done:false},{text:"Performance run-through",done:false}],dates:[]}
+  ],
+  news:"Welcome! Click ⚙ Edit to add classroom and school news."
+};
+
+let state=JSON.parse(JSON.stringify(DEFAULTS));
+let curPeriodIdx=0,autoMode=true,curDayType='';
+
+function getDayType(){if(state.dayOverride!=='auto')return state.dayOverride;const v=CAL[todayKey()];return(v==='A'||v==='B')?v:'none';}
+function getPeriods(){const d=getDayType();return d==='A'?state.periodsA:d==='B'?state.periodsB:[];}
+
+// TIMER
+let tSec=0,tTotal=0,tRunning=false,tIv=null;
+function setTimer(m){timerReset();tSec=m*60;tTotal=tSec;renderTimer();}
+function setCustomTimer(){const v=parseInt(document.getElementById('custom-timer-input').value);if(v>0&&v<=120)setTimer(v);}
+function timerStartStop(){
+  if(tRunning){clearInterval(tIv);tRunning=false;document.getElementById('timer-start-btn').textContent='Start';}
+  else{if(tSec<=0)return;tRunning=true;document.getElementById('timer-start-btn').textContent='Pause';
+    tIv=setInterval(()=>{tSec--;renderTimer();if(tSec<=0){clearInterval(tIv);tRunning=false;document.getElementById('timer-start-btn').textContent='Start';}},1000);}
+}
+function timerReset(){clearInterval(tIv);tRunning=false;tSec=tTotal;document.getElementById('timer-start-btn').textContent='Start';document.getElementById('timer-display').classList.remove('warning','urgent');renderTimer();}
+function renderTimer(){
+  const m=Math.floor(Math.abs(tSec)/60),s=Math.abs(tSec)%60;
+  document.getElementById('timer-display').textContent=(tSec<0?'-':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const el=document.getElementById('timer-display');
+  if(tTotal>0){el.classList.toggle('warning',tSec/tTotal<=0.25&&tSec>0);el.classList.toggle('urgent',tSec<=0);}
+}
+
+// CLOCK
+function updateClock(){
+  const n=new Date(),h=n.getHours(),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');
+  const ap=h>=12?'PM':'AM',h12=String(h%12||12).padStart(2,'0');
+  document.getElementById('live-clock').textContent=`${h12}:${m}:${s} ${ap}`;
+  const D=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('live-date').textContent=`${D[n.getDay()]} · ${M[n.getMonth()]} ${n.getDate()}, ${n.getFullYear()}`;
+  autoSwitch(n);
+}
+
+function pt(str){const[h,m]=str.split(':').map(Number);return h*60+m;}
+
+function autoSwitch(now){
+  const newDay=getDayType();
+  if(newDay!==curDayType){curDayType=newDay;curPeriodIdx=0;renderDayBadge();renderTabs();renderPeriod();}
+  const cur=now.getHours()*60+now.getMinutes(),periods=getPeriods();
+  let found=-1;
+  for(let i=0;i<periods.length;i++){if(cur>=pt(periods[i].startTime)&&cur<pt(periods[i].endTime)){found=i;break;}}
+  if(found!==-1&&autoMode&&found!==curPeriodIdx){curPeriodIdx=found;renderPeriod();renderTabs();}
+  if(found!==-1){
+    const rem=pt(periods[found].endTime)-cur,rh=Math.floor(rem/60),rm=rem%60;
+    document.getElementById('period-countdown').textContent=rh>0?`${rh}h ${rm}m remaining`:`${rm} min remaining`;
+  } else if(periods.length){
+    const up=periods.find(p=>pt(p.startTime)>cur);
+    document.getElementById('period-countdown').textContent=up?`Next: ${up.name} in ${pt(up.startTime)-cur}m`:'School day complete';
+  } else {
+    document.getElementById('period-countdown').textContent=newDay==='none'?'No school today':'—';
+  }
+}
+
+function renderDayBadge(){
+  const b=document.getElementById('day-badge'),strip=document.getElementById('period-strip');
+  if(curDayType==='A'){b.className='A';b.textContent='A Day';if(strip)strip.className='A';}
+  else if(curDayType==='B'){b.className='B';b.textContent='B Day';if(strip)strip.className='B';}
+  else{b.className='none';b.textContent='No Class';if(strip)strip.className='none';}
+}
+
+function renderTabs(){
+  const c=document.getElementById('class-tabs');c.innerHTML='';
+  const periods=getPeriods(),isB=curDayType==='B';
+  periods.forEach((p,i)=>{
+    const btn=document.createElement('button');
+    btn.className='class-tab'+(i===curPeriodIdx?' active':'')+(isB?' b-day':'');
+    btn.textContent=p.name;
+    btn.onclick=()=>{curPeriodIdx=i;autoMode=false;renderPeriod();renderTabs();document.getElementById('auto-switch-badge').textContent='○ Manual';};
+    c.appendChild(btn);
+  });
+}
+
+// Returns the canonical period for shared objective/agenda.
+// If the active period is a "Part X" variant, all parts share the first sibling's data.
+function getSharedPeriod(){
+  const periods=getPeriods();
+  if(!periods.length)return null;
+  const p=periods[curPeriodIdx];
+  const baseName=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+  if(baseName===p.name)return p; // not a multi-part period
+  const first=periods.find(x=>x.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim()===baseName);
+  return first||p;
+}
+
+// Sync all Part X siblings to match the canonical period's objective + agenda
+function syncParts(){
+  const periods=getPeriods();
+  const p=periods[curPeriodIdx];
+  const baseName=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+  if(baseName===p.name)return; // not a multi-part period
+  const canonical=getSharedPeriod();
+  periods.forEach(x=>{
+    if(x===canonical)return;
+    const xBase=x.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+    if(xBase===baseName){x.objective=canonical.objective;x.agenda=canonical.agenda;}
+  });
+}
+
+function renderPeriod(){
+  const periods=getPeriods();
+  if(!periods.length){
+    document.getElementById('period-name').textContent='No Class Today';
+    document.getElementById('period-time-range').textContent='';
+    document.getElementById('objective-text').textContent='';
+    renderAgenda([]);
+    document.getElementById('concert-countdown-block').classList.add('hidden');
+    return;
+  }
+  if(curPeriodIdx>=periods.length)curPeriodIdx=0;
+  const p=periods[curPeriodIdx];
+  const shared=getSharedPeriod();
+  document.getElementById('period-name').textContent=p.name;
+  document.getElementById('period-time-range').textContent=fmt12(p.startTime)+' – '+fmt12(p.endTime);
+  document.getElementById('objective-text').textContent=shared.objective;
+  renderAgenda(shared.agenda);
+  renderDates();
+  renderConcertCountdown(p.name);
+}
+
+function fmt12(str){const[h,m]=str.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}
+
+function renderAgenda(items){
+  const list=document.getElementById('agenda-list');list.innerHTML='';
+  (items||[]).forEach(item=>{
+    const li=document.createElement('li');
+    li.className='agenda-item'+(item.done?' done':'');
+    li.innerHTML=`<div class="agenda-check">${item.done?'✓':''}</div><div class="agenda-item-text">${item.text}</div>`;
+    li.onclick=()=>{item.done=!item.done;syncParts();saveState();renderAgenda(items);};
+    list.appendChild(li);
+  });
+}
+
+function addAgendaItem(){
+  const inp=document.getElementById('agenda-new-input'),text=inp.value.trim();
+  if(!text)return;
+  const shared=getSharedPeriod();if(!shared)return;
+  shared.agenda.push({text,done:false});syncParts();inp.value='';saveState();renderAgenda(shared.agenda);
+}
+document.getElementById('agenda-new-input').addEventListener('keydown',e=>{if(e.key==='Enter')addAgendaItem();});
+
+// CONCERT COUNTDOWN
+const CONCERT_DATES=[
+  {keywords:['6','sixth'],grade:'6th Grade',name:'Spring Concert',date:'2026-05-13',display:'May 13, 2026'},
+  {keywords:['7','seventh'],grade:'7th Grade',name:'Spring Concert',date:'2026-05-20',display:'May 20, 2026'},
+  {keywords:['8','eighth'],grade:'8th Grade',name:'Spring Concert',date:'2026-05-27',display:'May 27, 2026'},
+];
+function renderConcertCountdown(periodName){
+  const block=document.getElementById('concert-countdown-block');
+  const pn=(periodName||'').toLowerCase();
+  const match=CONCERT_DATES.find(c=>c.keywords.some(k=>pn.includes(k)));
+  if(!match){block.classList.add('hidden');return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  const concert=new Date(match.date+'T00:00:00');
+  const diff=Math.round((concert-today)/86400000);
+  document.getElementById('ccd-grade').textContent=match.grade;
+  document.getElementById('ccd-name').textContent=match.name;
+  document.getElementById('ccd-date').textContent=match.display;
+  const numEl=document.getElementById('ccd-num'),lblEl=document.getElementById('ccd-lbl');
+  numEl.className='ccd-days-num';
+  if(diff<0){numEl.textContent='Done';numEl.classList.add('past');lblEl.textContent=Math.abs(diff)+' days ago';}
+  else if(diff===0){numEl.textContent='🎵';numEl.classList.add('today');lblEl.textContent='today!';}
+  else{numEl.textContent=diff;if(diff<=7)numEl.classList.add('soon');lblEl.textContent=diff===1?'day away':'days away';}
+  block.classList.remove('hidden');
+}
+
+function renderNews(){document.getElementById('news-text').innerText=state.news;}
+function renderDates(){
+  const periods=getPeriods();
+  const p=periods.length?periods[curPeriodIdx]:null;
+  const dates=(p&&p.dates)||[];
+  const l=document.getElementById('dates-list');l.innerHTML='';
+  dates.forEach(d=>{const li=document.createElement('li');li.className='date-item';li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span>`;l.appendChild(li);});
+}
+
+// EDIT
+let activeTab='a';
+function switchEditTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.edit-tab').forEach((b,i)=>{const tabs=['a','b','general','override'];b.classList.toggle('active',tabs[i]===tab);});
+  document.querySelectorAll('.edit-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+}
+function openEdit(){
+  state.news=document.getElementById('news-text').innerText;
+  const shared=getSharedPeriod();if(shared)shared.objective=document.getElementById('objective-text').innerText;syncParts();
+  document.getElementById('edit-news').value=state.news;
+  buildEditor('edit-periods-a',state.periodsA,false);
+  buildEditor('edit-periods-b',state.periodsB,true);
+  updateOvBtns();switchEditTab('a');
+  document.getElementById('edit-overlay').classList.add('open');
+}
+function buildEditor(cid,periods,isB){
+  const c=document.getElementById(cid);c.innerHTML='';
+  periods.forEach((p,pi)=>{
+    const bl=document.createElement('div');bl.className='period-edit-block';bl.dataset.pi=pi;
+    const datesHtml=(p.dates||[]).map(d=>`<div class="dates-edit-item"><input class="date-input" type="text" placeholder="Mar 21" value="${d.date}"/><input class="label-input" type="text" placeholder="Event name…" value="${d.label}"/><button class="remove-btn" onclick="this.closest('.dates-edit-item').remove()">×</button></div>`).join('');
+    bl.innerHTML=`<h4 class="${isB?'b':''}">${p.name}</h4>
+    <div class="field-row">
+      <div><label>Name</label><input class="p-name" type="text" value="${p.name}"/></div>
+      <div><label>Start</label><input class="p-start" type="time" value="${p.startTime}"/></div>
+      <div><label>End</label><input class="p-end" type="time" value="${p.endTime}"/></div>
+    </div>
+    <div style="margin-bottom:0.5rem"><label style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.16rem;">Objective</label>
+    <textarea class="p-obj" rows="2" style="width:100%;font-family:'Playfair Display',serif;font-size:0.9rem;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);padding:0.3rem 0.5rem;border-radius:3px;resize:vertical;">${p.objective}</textarea></div>
+    <label style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.28rem;">Agenda Items</label>
+    <div class="p-agenda-list">${p.agenda.map(a=>`<div class="agenda-edit-item"><input type="text" value="${a.text}"/><button class="remove-btn" onclick="this.closest('.agenda-edit-item').remove()">×</button></div>`).join('')}</div>
+    <button class="btn" style="margin-top:0.32rem" onclick="addAgEdit(this)">+ Add Item</button>
+    <div style="margin-top:0.7rem"><label style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.28rem;">Upcoming Dates</label>
+    <div class="p-dates-list">${datesHtml}</div>
+    <button class="btn" style="margin-top:0.32rem" onclick="addDateEdit(this)">+ Add Date</button></div>`;
+    c.appendChild(bl);
+  });
+}
+function addAgEdit(btn){const l=btn.previousElementSibling;const r=document.createElement('div');r.className='agenda-edit-item';r.innerHTML=`<input type="text" placeholder="Agenda item…"/><button class="remove-btn" onclick="this.closest('.agenda-edit-item').remove()">×</button>`;l.appendChild(r);}
+function addDateEdit(btn){const l=btn.previousElementSibling;const r=document.createElement('div');r.className='dates-edit-item';r.innerHTML=`<input class="date-input" type="text" placeholder="Mar 21"/><input class="label-input" type="text" placeholder="Event name…"/><button class="remove-btn" onclick="this.closest('.dates-edit-item').remove()">×</button>`;l.appendChild(r);}
+function setDayOverride(v){state.dayOverride=v;updateOvBtns();}
+function updateOvBtns(){
+  const v=state.dayOverride;
+  document.getElementById('ov-auto').className='day-toggle-btn'+(v==='auto'?' sel-auto':'');
+  document.getElementById('ov-a').className='day-toggle-btn'+(v==='A'?' sel-a':'');
+  document.getElementById('ov-b').className='day-toggle-btn'+(v==='B'?' sel-b':'');
+  document.getElementById('ov-none').className='day-toggle-btn'+(v==='none'?' sel-none':'');
+}
+function saveEdit(){
+  state.news=document.getElementById('edit-news').value;
+  saveEdPeriods('edit-periods-a',state.periodsA);
+  saveEdPeriods('edit-periods-b',state.periodsB);
+  // Sync all Part X siblings in both day types
+  ['periodsA','periodsB'].forEach(key=>{
+    const periods=state[key];
+    const seen={};
+    periods.forEach(p=>{
+      const base=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+      if(base!==p.name){
+        if(!seen[base])seen[base]=p;
+        else{p.objective=seen[base].objective;p.agenda=seen[base].agenda;}
+      }
+    });
+  });
+  saveState();closeEdit();
+  curDayType='';autoMode=true;
+  document.getElementById('auto-switch-badge').textContent='● Auto';
+  autoSwitch(new Date());renderDayBadge();renderTabs();renderPeriod();renderNews();renderDates();
+}
+function saveEdPeriods(cid,periods){
+  document.querySelectorAll('#'+cid+' .period-edit-block').forEach((bl,pi)=>{
+    if(!periods[pi])return;
+    periods[pi].name=bl.querySelector('.p-name').value;
+    periods[pi].startTime=bl.querySelector('.p-start').value;
+    periods[pi].endTime=bl.querySelector('.p-end').value;
+    periods[pi].objective=bl.querySelector('.p-obj').value;
+    const oldAgenda=periods[pi].agenda;
+    periods[pi].agenda=[];
+    bl.querySelectorAll('.p-agenda-list .agenda-edit-item input').forEach((inp,ai)=>{
+      const t=inp.value.trim();
+      if(t) periods[pi].agenda.push({text:t, done:oldAgenda[ai]?oldAgenda[ai].done:false});
+    });
+    periods[pi].dates=[];
+    bl.querySelectorAll('.p-dates-list .dates-edit-item').forEach(row=>{
+      const date=row.querySelector('.date-input').value.trim();
+      const label=row.querySelector('.label-input').value.trim();
+      if(date||label) periods[pi].dates.push({date,label});
+    });
+  });
+}
+function closeEdit(){document.getElementById('edit-overlay').classList.remove('open');}
+document.getElementById('edit-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('edit-overlay'))closeEdit();});
+
+// ── GOOGLE SHEETS SYNC ──
+const API_URL='https://script.google.com/macros/s/AKfycbyw4cWv9oNkqsyfTBc0QNO2jkqfc1k4RyAS9RDYeB-QQfcqjAMtO_817Sc49LHDGIkPDg/exec';
+
+function showSyncStatus(msg,color='var(--text-muted)'){
+  let el=document.getElementById('sync-status');
+  if(!el){el=document.createElement('div');el.id='sync-status';Object.assign(el.style,{position:'fixed',bottom:'0.6rem',right:'0.8rem',fontFamily:"'DM Mono',monospace",fontSize:'0.5rem',letterSpacing:'0.1em',textTransform:'uppercase',padding:'0.2rem 0.5rem',borderRadius:'3px',background:'rgba(247,242,238,0.92)',border:'1px solid var(--border)',zIndex:'999',transition:'opacity 0.4s'});document.body.appendChild(el);}
+  el.style.color=color;el.style.opacity='1';el.textContent=msg;
+  if(color!=='var(--maroon)') setTimeout(()=>{el.style.opacity='0';},3000);
+}
+
+async function saveState(){
+  showSyncStatus('Saving…','var(--text-muted)');
+  try{
+    const json=JSON.stringify(state);
+    const chunkSize=500;
+    const chunks=[];
+    for(let i=0;i<json.length;i+=chunkSize) chunks.push(json.slice(i,i+chunkSize));
+    for(let i=0;i<chunks.length;i++){
+      const url=API_URL+'?action=save&index='+i+'&total='+chunks.length+'&chunk='+encodeURIComponent(chunks[i]);
+      await fetch(url);
+    }
+    showSyncStatus('✓ Saved');
+  } catch(e){
+    showSyncStatus('⚠ Save failed — no internet?','var(--maroon)');
+  }
+}
+
+async function loadState(){
+  showSyncStatus('Loading…','var(--text-muted)');
+  try{
+    const res=await fetch(API_URL+'?t='+Date.now());
+    const text=await res.text();
+    if(text&&text.trim().startsWith('{')){
+      const loaded=JSON.parse(text);
+      if(loaded&&loaded.periodsA) state=loaded;
+    }
+    showSyncStatus('✓ Loaded');
+  } catch(e){
+    showSyncStatus('⚠ Could not load — using defaults','var(--maroon)');
+  }
+  curDayType=getDayType();
+  renderDayBadge();renderTabs();renderPeriod();renderNews();renderDates();
+  updateClock();setInterval(updateClock,1000);
+}
+
+document.getElementById('objective-text').addEventListener('blur',()=>{const shared=getSharedPeriod();if(shared){shared.objective=document.getElementById('objective-text').innerText;syncParts();}saveState();});
+document.getElementById('news-text').addEventListener('blur',()=>{state.news=document.getElementById('news-text').innerText;saveState();});
+
+// INIT — load from Google Sheets first, then start
+loadState();
+</script>
+</body>
+</html>
