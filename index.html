@@ -749,7 +749,8 @@ function showSyncStatus(msg,color='var(--text-muted)'){
 async function saveState(){
   showSyncStatus('Saving…','var(--text-muted)');
   try{
-    await fetch(API_URL,{method:'POST',body:JSON.stringify(state)});
+    const encoded=encodeURIComponent(JSON.stringify(state));
+    await fetch(API_URL+'?action=save&data='+encoded);
     showSyncStatus('✓ Saved');
   } catch(e){
     showSyncStatus('⚠ Save failed — no internet?','var(--maroon)');
