@@ -265,7 +265,13 @@
   .sub-panel { flex:1; padding:1rem 1.2rem; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; }
   .sub-panel+.sub-panel { border-top:1px solid var(--border); }
   .sub-panel .panel-label { margin-bottom:0.5rem; }
-  #news-text { font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:400; line-height:1.65; color:#FFFFFF; flex:1; overflow-y:auto; white-space:pre-wrap; }
+  #advisory-banner:not(:empty) {
+    font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:700;
+    color:var(--gold); background:rgba(255,160,60,0.1);
+    border:1px solid rgba(255,176,96,0.3); border-radius:4px;
+    padding:0.4rem 0.7rem; margin-bottom:0.6rem; flex-shrink:0;
+    letter-spacing:0.02em;
+  } font-size:1.2rem; font-weight:400; line-height:1.65; color:#FFFFFF; flex:1; overflow-y:auto; white-space:pre-wrap; }
   #news-text::-webkit-scrollbar { width:3px; }
   #news-text::-webkit-scrollbar-thumb { background:var(--border); }
   #news-text[contenteditable="true"]:focus { outline:none; }
@@ -572,9 +578,10 @@
         <button class="btn primary" onclick="addDateItem()">Add</button>
       </div>
     </div>
-    <div class="sub-panel">
+    <div class="sub-panel" onclick="focusPanel('news')">
       <div class="panel-label">Classroom &amp; School News <button class="focus-expand-btn" onclick="focusPanel('news')" title="Expand">⛶</button></div>
-      <div id="news-text" contenteditable="true" spellcheck="true"></div>
+      <div id="advisory-banner"></div>
+      <div id="news-text" contenteditable="true" spellcheck="true" onclick="event.stopPropagation()"></div>
     </div>
   </div>
 
@@ -694,17 +701,17 @@ function todayKey(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1
 const DEFAULTS={
   dayOverride:'auto',
   periodsA:[
-    {name:"Strings 8",startTime:"08:10",endTime:"09:41",objective:"Students will perform with proper tone and bow technique.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale practice",done:false},{text:"Rehearse current piece",done:false},{text:"Section work",done:false}],dates:[],news:""},
+    {name:"Strings 8 (1A)",startTime:"08:10",endTime:"09:41",objective:"Students will perform with proper tone and bow technique.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale practice",done:false},{text:"Rehearse current piece",done:false},{text:"Section work",done:false}],dates:[],news:""},
     {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}],dates:[],news:""},
-    {name:"Percussion 6",startTime:"12:08",endTime:"13:38",objective:"Students will develop rhythmic accuracy and mallet technique.",agenda:[{text:"Warm-up: rudiments",done:false},{text:"Rhythm exercises",done:false},{text:"Rehearse current piece",done:false}],dates:[],news:""},
-    {name:"Percussion 7",startTime:"13:41",endTime:"15:00",objective:"Students will apply dynamic contrast in ensemble playing.",agenda:[{text:"Warm-up: stick control",done:false},{text:"Dynamic exercises",done:false},{text:"Ensemble rehearsal",done:false}],dates:[],news:""}
+    {name:"Percussion 6 (3A)",startTime:"12:08",endTime:"13:38",objective:"Students will develop rhythmic accuracy and mallet technique.",agenda:[{text:"Warm-up: rudiments",done:false},{text:"Rhythm exercises",done:false},{text:"Rehearse current piece",done:false}],dates:[],news:""},
+    {name:"Percussion 7 (4A)",startTime:"13:41",endTime:"15:00",objective:"Students will apply dynamic contrast in ensemble playing.",agenda:[{text:"Warm-up: stick control",done:false},{text:"Dynamic exercises",done:false},{text:"Ensemble rehearsal",done:false}],dates:[],news:""}
   ],
   periodsB:[
-    {name:"Brass 7",startTime:"08:10",endTime:"09:41",objective:"Students will play scales with consistent tone and intonation.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale/arpeggio practice",done:false},{text:"Rehearse concert piece",done:false}],dates:[],news:""},
+    {name:"Brass 7 (1B)",startTime:"08:10",endTime:"09:41",objective:"Students will play scales with consistent tone and intonation.",agenda:[{text:"Morning announcements",done:false},{text:"Take attendance",done:false},{text:"Warm-up: long tones",done:false},{text:"Scale/arpeggio practice",done:false},{text:"Rehearse concert piece",done:false}],dates:[],news:""},
     {name:"Advisory",startTime:"09:44",endTime:"10:16",objective:"Advisory period.",agenda:[{text:"Advisory activity",done:false}],dates:[],news:""},
-    {name:"Brass 7 (Part 1)",startTime:"11:38",endTime:"12:36",objective:"Students will sight-read and rehearse new material.",agenda:[{text:"Sight-reading exercise",done:false},{text:"Section rehearsal",done:false}],dates:[],news:""},
-    {name:"Brass 7 (Part 2)",startTime:"13:08",endTime:"13:38",objective:"Students will focus on balance and blend.",agenda:[{text:"Balance/blend exercises",done:false},{text:"Full run-through",done:false}],dates:[],news:""},
-    {name:"Strings 8",startTime:"13:41",endTime:"15:00",objective:"Students will refine bowing technique and musical expression.",agenda:[{text:"Warm-up: scales",done:false},{text:"Bowing technique drill",done:false},{text:"Expression/dynamics",done:false},{text:"Performance run-through",done:false}],dates:[],news:""}
+    {name:"Brass 7 (3B) Part 1",startTime:"11:38",endTime:"12:36",objective:"Students will sight-read and rehearse new material.",agenda:[{text:"Sight-reading exercise",done:false},{text:"Section rehearsal",done:false}],dates:[],news:""},
+    {name:"Brass 7 (3B) Part 2",startTime:"13:08",endTime:"13:38",objective:"Students will focus on balance and blend.",agenda:[{text:"Balance/blend exercises",done:false},{text:"Full run-through",done:false}],dates:[],news:""},
+    {name:"Strings 8 (4B)",startTime:"13:41",endTime:"15:00",objective:"Students will refine bowing technique and musical expression.",agenda:[{text:"Warm-up: scales",done:false},{text:"Bowing technique drill",done:false},{text:"Expression/dynamics",done:false},{text:"Performance run-through",done:false}],dates:[],news:""}
   ]
 };
 
@@ -845,9 +852,9 @@ function getSharedPeriod(){
   const periods=getPeriods();
   if(!periods.length)return null;
   const p=periods[curPeriodIdx];
-  const baseName=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+  const baseName=p.name.replace(/\s*Part\s*\d+\s*$/i,'').trim();
   if(baseName===p.name)return p; // not a multi-part period
-  const first=periods.find(x=>x.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim()===baseName);
+  const first=periods.find(x=>x.name.replace(/\s*Part\s*\d+\s*$/i,'').trim()===baseName);
   return first||p;
 }
 
@@ -856,12 +863,12 @@ function syncParts(){
   const periods=getPeriods();
   if(!periods.length)return;
   const p=periods[curPeriodIdx];
-  const baseName=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+  const baseName=p.name.replace(/\s*Part\s*\d+\s*$/i,'').trim();
   if(baseName===p.name)return;
   const canonical=getSharedPeriod();
   periods.forEach(x=>{
     if(x===canonical)return;
-    const xBase=x.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+    const xBase=x.name.replace(/\s*Part\s*\d+\s*$/i,'').trim();
     if(xBase===baseName){
       x.objective=canonical.objective;
       x.agenda=canonical.agenda;
@@ -942,11 +949,69 @@ function renderConcertCountdown(periodName){
   block.classList.remove('hidden');
 }
 
+// ── ADVISORY ROTATION ──
+const ADVISORY_ROTATION={
+  // Q3
+  '2026-01-20':'1A','2026-01-21':'1B','2026-01-22':'2A','2026-01-23':'2B','2026-01-26':'3A',
+  '2026-01-27':'3B','2026-01-28':'4A','2026-01-29':'4B','2026-01-30':'1A',
+  '2026-02-02':'1B','2026-02-03':'2A','2026-02-04':'2B','2026-02-05':'3A','2026-02-06':'3B',
+  '2026-02-09':'4A','2026-02-10':'4B','2026-02-11':'1A','2026-02-12':'1B','2026-02-13':'2A',
+  '2026-02-18':'2B','2026-02-19':'3A','2026-02-20':'No Advisory','2026-02-23':'4A',
+  '2026-02-24':'4B','2026-02-25':'1A','2026-02-26':'1B','2026-02-27':'2A',
+  '2026-03-02':'2B','2026-03-03':'3A','2026-03-04':'3B','2026-03-05':'4A','2026-03-06':'4B',
+  '2026-03-09':'1A','2026-03-10':'1B','2026-03-11':'2A','2026-03-12':'2B','2026-03-13':'3A',
+  '2026-03-16':'3B','2026-03-17':'4A','2026-03-18':'4B','2026-03-19':'1A','2026-03-23':'1B',
+  '2026-03-24':'2A','2026-03-25':'2B','2026-03-26':'3A','2026-03-27':'3B','2026-03-30':'4A',
+  '2026-03-31':'4B','2026-04-01':'No Advisory',
+  // Q4
+  '2026-04-13':'1B','2026-04-14':'1A','2026-04-15':'2B','2026-04-16':'2A','2026-04-17':'3B',
+  '2026-04-20':'3A','2026-04-21':'4B','2026-04-22':'4A','2026-04-23':'1B','2026-04-24':'1A',
+  '2026-04-27':'2B','2026-04-28':'2A','2026-04-29':'3B','2026-04-30':'3A',
+  '2026-05-01':'4B','2026-05-04':'4A','2026-05-05':'1B','2026-05-06':'1A','2026-05-07':'2B',
+  '2026-05-08':'2A','2026-05-11':'3B','2026-05-12':'3A','2026-05-13':'4B','2026-05-14':'4A',
+  '2026-05-15':'1B','2026-05-18':'1A','2026-05-19':'2B','2026-05-20':'2A','2026-05-21':'3B',
+  '2026-05-22':'3A','2026-05-26':'4B','2026-05-27':'4A','2026-05-29':'1B',
+  '2026-06-01':'1A','2026-06-02':'2B','2026-06-03':'2A','2026-06-04':'3B','2026-06-05':'3A',
+  '2026-06-08':'4B','2026-06-09':'4A','2026-06-10':'1B','2026-06-11':'1A','2026-06-12':'2B',
+  '2026-06-15':'No Advisory','2026-06-16':'No Advisory'
+};
+
+function getTodayAdvisory(){
+  return ADVISORY_ROTATION[todayKey()]||null;
+}
+
+const ADVISORY_CLASS_NAMES={
+  '1A':'Strings 8 (1A)','1B':'Brass 7 (1B)','2A':'Strings 8 (1A)','2B':'Brass 7 (1B)',
+  '3A':'Percussion 6 (3A)','3B':'Brass 7 (3B)','4A':'Percussion 7 (4A)','4B':'Strings 8 (4B)',
+  'No Advisory':'No Advisory'
+};
+
 function renderNews(){
   const periods=getPeriods();
   const p=periods.length?periods[curPeriodIdx]:null;
-  document.getElementById('news-text').innerText=(p&&p.news)||'';
+  const userNews=(p&&p.news)||'';
+  const advisory=getTodayAdvisory();
+  const pName=(p&&p.name)||'';
+  const banner=document.getElementById('advisory-banner');
+  const newsEl=document.getElementById('news-text');
+
+  let advisoryLine='';
+  if(advisory){
+    const isFirstPeriod=/^(strings 8 \(1a\)|brass 7 \(1b\))/i.test(pName.trim());
+    if(isFirstPeriod){
+      if(advisory==='No Advisory'){
+        advisoryLine='Advisory: No Advisory today';
+      } else {
+        const className=ADVISORY_CLASS_NAMES[advisory]||advisory;
+        advisoryLine=`Advisory today: ${className} (${advisory})`;
+      }
+    }
+  }
+
+  banner.textContent=advisoryLine;
+  newsEl.innerText=userNews;
 }
+
 function renderDates(){
   const periods=getPeriods();
   const p=periods.length?periods[curPeriodIdx]:null;
@@ -1039,7 +1104,7 @@ function saveEdit(){
     const periods=state[key];
     const seen={};
     periods.forEach(p=>{
-      const base=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
+      const base=p.name.replace(/\s*Part\s*\d+\s*$/i,'').trim();
       if(base!==p.name){
         if(!seen[base])seen[base]=p;
         else{p.objective=seen[base].objective;p.agenda=seen[base].agenda;p.news=seen[base].news;p.dates=seen[base].dates;}
@@ -1364,7 +1429,14 @@ function closeHistory(){document.getElementById('history-overlay').classList.rem
 document.addEventListener('click',e=>{if(e.target===document.getElementById('history-overlay'))closeHistory();});
 
 document.getElementById('objective-text').addEventListener('blur',()=>{const shared=getSharedPeriod();if(shared){shared.objective=document.getElementById('objective-text').innerText;syncParts();}saveState();});
-document.getElementById('news-text').addEventListener('blur',()=>{const periods=getPeriods();if(periods.length){periods[curPeriodIdx].news=document.getElementById('news-text').innerText;syncParts();}saveState();});
+document.getElementById('news-text').addEventListener('blur',()=>{
+  const periods=getPeriods();
+  if(periods.length){
+    periods[curPeriodIdx].news=document.getElementById('news-text').innerText;
+    syncParts();
+  }
+  saveState();
+});
 
 // ── TUNING REFERENCE ──
 let audioCtx=null;
