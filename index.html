@@ -271,7 +271,14 @@
   #news-text[contenteditable="true"]:focus { outline:none; }
   #dates-list { list-style:none; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.55rem; }
   .date-item { display:flex; align-items:baseline; gap:0.55rem; }
-  .date-pill {
+  #dates-add-row { display:flex; gap:0.35rem; margin-top:0.5rem; flex-shrink:0; }
+  #dates-new-date { width:62px; font-family:'DM Mono',monospace; font-size:0.75rem; border:1px solid var(--border); background:rgba(61,16,8,0.6); color:var(--text-primary); padding:0.22rem 0.35rem; border-radius:3px; flex-shrink:0; }
+  #dates-new-label { flex:1; font-family:'Outfit',sans-serif; font-size:0.85rem; border:1px solid var(--border); background:rgba(61,16,8,0.6); color:var(--text-primary); padding:0.22rem 0.4rem; border-radius:3px; }
+  #dates-new-date:focus, #dates-new-label:focus { outline:none; border-color:var(--gold); }
+  #dates-new-date::placeholder, #dates-new-label::placeholder { color:var(--text-muted); }
+  .date-remove { opacity:0; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:0 0.2rem; line-height:1; transition:all 0.15s; flex-shrink:0; }
+  .date-item:hover .date-remove { opacity:1; }
+  .date-remove:hover { color:var(--gold); }
     font-family:'DM Mono',monospace; font-size:0.65rem; font-weight:700;
     background:rgba(255,160,60,0.15); color:var(--gold);
     padding:0.12rem 0.45rem; border-radius:3px; white-space:nowrap;
@@ -513,9 +520,6 @@
       </div>
       <button id="settings-btn" onclick="openEdit()">⚙ Edit</button>
       <button id="history-btn" onclick="openHistory()">⟳ History</button>
-      <button id="export-btn" onclick="exportData()">↓ Export</button>
-      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)"/>
-      <button id="import-btn" onclick="document.getElementById('import-input').click()">↑ Import</button>
     </div>
   </div>
   <div id="period-strip" class="none">
@@ -562,6 +566,11 @@
         </div>
       </div>
       <ul id="dates-list"></ul>
+      <div id="dates-add-row">
+        <input id="dates-new-date" type="text" placeholder="Mar 21" />
+        <input id="dates-new-label" type="text" placeholder="Event name…" />
+        <button class="btn primary" onclick="addDateItem()">Add</button>
+      </div>
     </div>
     <div class="sub-panel">
       <div class="panel-label">Classroom &amp; School News <button class="focus-expand-btn" onclick="focusPanel('news')" title="Expand">⛶</button></div>
@@ -900,6 +909,7 @@ function addAgendaItem(){
   shared.agenda.push({text,done:false});syncParts();inp.value='';saveState();renderAgenda(shared.agenda);
 }
 document.getElementById('agenda-new-input').addEventListener('keydown',e=>{if(e.key==='Enter')addAgendaItem();});
+document.getElementById('dates-new-label').addEventListener('keydown',e=>{if(e.key==='Enter')addDateItem();});
 
 // CONCERT COUNTDOWN
 const CONCERT_DATES=[
@@ -936,8 +946,32 @@ function renderDates(){
   const p=periods.length?periods[curPeriodIdx]:null;
   const dates=(p&&p.dates)||[];
   const l=document.getElementById('dates-list');l.innerHTML='';
-  dates.forEach(d=>{const li=document.createElement('li');li.className='date-item';li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span>`;l.appendChild(li);});
+  dates.forEach((d,idx)=>{
+    const li=document.createElement('li');li.className='date-item';
+    li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span><button class="date-remove" title="Remove">×</button>`;
+    li.querySelector('.date-remove').addEventListener('click',e=>{e.stopPropagation();dates.splice(idx,1);saveState();renderDates();});
+    l.appendChild(li);
+  });
 }
+
+function addDateItem(){
+  const dateIn=document.getElementById('dates-new-date');
+  const labelIn=document.getElementById('dates-new-label');
+  const date=dateIn.value.trim();
+  const label=labelIn.value.trim();
+  if(!date&&!label)return;
+  const periods=getPeriods();
+  if(!periods.length)return;
+  if(!periods[curPeriodIdx].dates) periods[curPeriodIdx].dates=[];
+  periods[curPeriodIdx].dates.push({date,label});
+  dateIn.value='';labelIn.value='';
+  saveState();renderDates();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const li=document.getElementById('dates-new-label');
+  if(li) li.addEventListener('keydown',e=>{if(e.key==='Enter')addDateItem();});
+});
 
 // EDIT
 let activeTab='a';
@@ -1184,40 +1218,6 @@ document.addEventListener('keydown',e=>{
 });
 
 // ── EXPORT / IMPORT ──
-function exportData(){
-  const json=JSON.stringify(state,null,2);
-  const blob=new Blob([json],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  const d=new Date();
-  a.download='classroom-display-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function importData(event){
-  const file=event.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const loaded=JSON.parse(e.target.result);
-      if(loaded&&loaded.periodsA){
-        state=loaded;
-        curDayType='';curPeriodIdx=0;autoMode=true;
-        renderDayBadge();renderTabs();renderPeriod();renderNews();renderDates();
-        showSyncStatus('✓ Imported!');
-      } else {
-        showSyncStatus('⚠ Invalid file','var(--maroon)');
-      }
-    } catch(err){
-      showSyncStatus('⚠ Could not read file','var(--maroon)');
-    }
-    event.target.value='';
-  };
-  reader.readAsText(file);
-}
-
 // ── SUPABASE SYNC ──
 const SUPA_URL='https://ionybutgylnrqmxemrwq.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvbnlidXRneWxucnFteGVtcndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTA3MTYsImV4cCI6MjA4OTY4NjcxNn0.UaXyoeyqoiKFQleWgnXg_EVV7mnkdM2dXWtD5EyVjbA';
