@@ -851,17 +851,23 @@ function getSharedPeriod(){
   return first||p;
 }
 
-// Sync all Part X siblings to match the canonical period's objective + agenda
+// Sync all Part X siblings to match the canonical period's objective, agenda, news and dates
 function syncParts(){
   const periods=getPeriods();
+  if(!periods.length)return;
   const p=periods[curPeriodIdx];
   const baseName=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
-  if(baseName===p.name)return; // not a multi-part period
+  if(baseName===p.name)return;
   const canonical=getSharedPeriod();
   periods.forEach(x=>{
     if(x===canonical)return;
     const xBase=x.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
-    if(xBase===baseName){x.objective=canonical.objective;x.agenda=canonical.agenda;}
+    if(xBase===baseName){
+      x.objective=canonical.objective;
+      x.agenda=canonical.agenda;
+      x.news=canonical.news;
+      x.dates=canonical.dates;
+    }
   });
 }
 
@@ -949,7 +955,7 @@ function renderDates(){
   dates.forEach((d,idx)=>{
     const li=document.createElement('li');li.className='date-item';
     li.innerHTML=`<span class="date-pill">${d.date}</span><span class="date-label">${d.label}</span><button class="date-remove" title="Remove">×</button>`;
-    li.querySelector('.date-remove').addEventListener('click',e=>{e.stopPropagation();dates.splice(idx,1);saveState();renderDates();});
+    li.querySelector('.date-remove').addEventListener('click',e=>{e.stopPropagation();dates.splice(idx,1);syncParts();saveState();renderDates();});
     l.appendChild(li);
   });
 }
@@ -965,7 +971,7 @@ function addDateItem(){
   if(!periods[curPeriodIdx].dates) periods[curPeriodIdx].dates=[];
   periods[curPeriodIdx].dates.push({date,label});
   dateIn.value='';labelIn.value='';
-  saveState();renderDates();
+  syncParts();saveState();renderDates();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -1036,7 +1042,7 @@ function saveEdit(){
       const base=p.name.replace(/\s*\(Part\s*\d+\)\s*$/i,'').trim();
       if(base!==p.name){
         if(!seen[base])seen[base]=p;
-        else{p.objective=seen[base].objective;p.agenda=seen[base].agenda;}
+        else{p.objective=seen[base].objective;p.agenda=seen[base].agenda;p.news=seen[base].news;p.dates=seen[base].dates;}
       }
     });
   });
@@ -1358,7 +1364,7 @@ function closeHistory(){document.getElementById('history-overlay').classList.rem
 document.addEventListener('click',e=>{if(e.target===document.getElementById('history-overlay'))closeHistory();});
 
 document.getElementById('objective-text').addEventListener('blur',()=>{const shared=getSharedPeriod();if(shared){shared.objective=document.getElementById('objective-text').innerText;syncParts();}saveState();});
-document.getElementById('news-text').addEventListener('blur',()=>{const periods=getPeriods();if(periods.length)periods[curPeriodIdx].news=document.getElementById('news-text').innerText;saveState();});
+document.getElementById('news-text').addEventListener('blur',()=>{const periods=getPeriods();if(periods.length){periods[curPeriodIdx].news=document.getElementById('news-text').innerText;syncParts();}saveState();});
 
 // ── TUNING REFERENCE ──
 let audioCtx=null;
